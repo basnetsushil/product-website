@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen pt-20">
+    <!-- Sidebar (Same as above) -->
+    <main class="flex-1 p-8">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center mb-10">
+                <h1 class="text-3xl font-bold text-gradient">Manage Team</h1>
+                <a href="{{ url_for('add_team_member') }}" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-neutral-200 transition-all">+ Add Member</a>
+            </div>
+            <div class="glass rounded-3xl overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-white/5 text-neutral-400 uppercase text-xs">
+                        <tr><th class="px-6 py-4">Member</th><th class="px-6 py-4">Role</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for member in team %}
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4 font-medium">{{ member.name }}</td>
+                            <td class="px-6 py-4 text-neutral-400">{{ member.job_title }}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase {% if member.is_published %}bg-green-500/20 text-green-400{% else %}bg-neutral-500/20 text-neutral-400{% endif %}">
+                                    {{ 'Active' if member.is_published else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right space-x-3">
+                                <a href="{{ url_for('edit_team_member', id=member.id) }}" class="text-blue-400 hover:underline">Edit</a>
+                                <a href="{{ url_for('delete_team_member', id=member.id) }}" class="text-red-400 hover:underline" onclick="return confirm('Remove member?')">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Event - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-sidebar">
+        <h2>Admin Menu</h2>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_events') }}" class="active">Events</a></li>
+            <li><a href="{{ url_for('manage_articles') }}">Articles</a></li>
+            <li><a href="{{ url_for('manage_testimonials') }}">Testimonials</a></li>
+            <li><a href="{{ url_for('manage_solutions') }}">Solutions</a></li>
+            <li><a href="{{ url_for('manage_team') }}">Team Members</a></li>
+            <li><a href="{{ url_for('manage_enquiries') }}">Enquiries</a></li>
+            <li><a href="{{ url_for('settings') }}">Settings</a></li>
+            <li><a href="{{ url_for('admin_logout') }}" class="logout">Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="admin-content">
+        <h1>Edit Event</h1>
+        
+        <form method="POST" enctype="multipart/form-data" class="form">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.title.label }}
+                {{ form.title(class="form-control") }}
+                {% if form.title.errors %}
+                    <span class="form-error">{{ form.title.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.description.label }}
+                {{ form.description(class="form-control", rows="6") }}
+                {% if form.description.errors %}
+                    <span class="form-error">{{ form.description.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.date.label }}
+                {{ form.date(class="form-control", type="datetime-local") }}
+                {% if form.date.errors %}
+                    <span class="form-error">{{ form.date.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.location.label }}
+                {{ form.location(class="form-control") }}
+                {% if form.location.errors %}
+                    <span class="form-error">{{ form.location.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.image.label }}
+                {% if event.image %}
+                    <p>Current image: {{ event.image }}</p>
+                {% endif %}
+                {{ form.image(class="form-control") }}
+                {% if form.image.errors %}
+                    <span class="form-error">{{ form.image.errors[0] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(value="Update Event", class="btn btn-primary") }}
+                <a href="{{ url_for('manage_events') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

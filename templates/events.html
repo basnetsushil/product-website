@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Product Website{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Events</h1>
+        <p>Join us at our upcoming events</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="events-list">
+            {% for event in events %}
+            <div class="event-card">
+                {% if event.image %}
+                    <img src="{{ url_for('static', filename='uploads/events/' + event.image) }}" alt="{{ event.title }}" class="event-image">
+                {% else %}
+                    <div class="event-image-placeholder">No Image</div>
+                {% endif %}
+                <div class="event-content">
+                    <h2>{{ event.title }}</h2>
+                    <p class="event-date">
+                        <strong>Date:</strong> {{ event.date.strftime('%B %d, %Y at %I:%M %p') }}
+                    </p>
+                    <p class="event-location">
+                        <strong>Location:</strong> {{ event.location }}
+                    </p>
+                    <p class="event-description">{{ event.description }}</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary">Register Interest</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if not events %}
+<div class="container">
+    <p class="text-center">No events scheduled at the moment. Check back soon!</p>
+</div>
+{% endif %}
+{% endblock %}

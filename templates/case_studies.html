@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Case Studies - Product Website{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Case Studies</h1>
+        <p>Real-world results and success stories</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        {% for case_study in case_studies %}
+        <div class="case-study">
+            {% if case_study.image %}
+                <img src="{{ url_for('static', filename='uploads/solutions/' + case_study.image) }}" alt="{{ case_study.title }}" class="case-study-image">
+            {% endif %}
+            <div class="case-study-content">
+                <h2>{{ case_study.title }}</h2>
+                <p><strong>Client:</strong> {{ case_study.client }}</p>
+                
+                <h3>Challenge</h3>
+                <p>{{ case_study.challenge }}</p>
+                
+                <h3>Solution</h3>
+                <p>{{ case_study.solution }}</p>
+                
+                <h3>Results</h3>
+                <p>{{ case_study.results }}</p>
+            </div>
+        </div>
+        <hr>
+        {% endfor %}
+    </div>
+</section>
+
+{% if not case_studies %}
+<div class="container">
+    <p class="text-center">No case studies available at the moment.</p>
+</div>
+{% endif %}
+{% endblock %}

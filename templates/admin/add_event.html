@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex min-h-screen pt-20">
+    <!-- Sidebar (Same as Dashboard) -->
+    <aside class="w-64 glass h-screen sticky top-20 p-6 flex flex-col gap-2">
+        <a href="{{ url_for('admin_dashboard') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
+            <span>📊</span> Dashboard
+        </a>
+        <a href="{{ url_for('manage_events') }}" class="flex items-center gap-3 p-3 rounded-xl bg-white text-black font-semibold">
+            <span>📅</span> Events
+        </a>
+        <!-- ... other sidebar links ... -->
+    </aside>
+
+    <main class="flex-1 p-8">
+        <div class="max-w-3xl mx-auto">
+            <header class="mb-10">
+                <h1 class="text-3xl font-bold text-gradient">Add New Event</h1>
+                <p class="text-neutral-400">Create a new event to engage your audience.</p>
+            </header>
+
+            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Event Name</label>
+                        {{ form.name(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Date</label>
+                        {{ form.event_date(type="date", class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-neutral-300">Location</label>
+                    {{ form.location(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-neutral-300">Description</label>
+                    {{ form.description(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Registration Link</label>
+                        {{ form.register_link(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Image</label>
+                        {{ form.image(class="text-sm text-neutral-400") }}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
+                    {{ form.is_upcoming(class="w-4 h-4") }}
+                    <label class="text-sm font-medium text-neutral-300">Mark as Upcoming Event</label>
+                </div>
+
+                <div class="flex gap-4 pt-6">
+                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Event</button>
+                    <a href="{{ url_for('manage_events') }}" class="glass px-8 py-3 rounded-full font-bold text-center transition-all">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

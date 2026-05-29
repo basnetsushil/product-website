@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen pt-20">
+    <!-- Sidebar (Same as above) -->
+    <main class="flex-1 p-8">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold text-gradient mb-10">Add AI Solution</h1>
+            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
+                {{ form.hidden_tag() }}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Solution Title</label>
+                        {{ form.title(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Icon (Emoji or Class)</label>
+                        {{ form.icon_class(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-neutral-300">Description</label>
+                    {{ form.description(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 1</label>
+                        {{ form.benefit_1(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 2</label>
+                        {{ form.benefit_2(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 3</label>
+                        {{ form.benefit_3(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Image Upload</label>
+                        {{ form.image(class="text-sm text-neutral-400") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Display Order (Index)</label>
+                        {{ form.order_index(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
+                    {{ form.is_published(class="w-4 h-4") }}
+                    <label class="text-sm font-medium text-neutral-300">Publish to Homepage</label>
+                </div>
+                <div class="flex gap-4 pt-6">
+                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Solution</button>
+                    <a href="{{ url_for('manage_solutions') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen pt-20">
+    <!-- Sidebar (Same as above) -->
+    <main class="flex-1 p-8">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl font-bold text-gradient mb-10">Add Testimonial</h1>
+            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
+                {{ form.hidden_tag() }}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Customer Name</label>
+                        {{ form.customer_name(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Company</label>
+                        {{ form.company(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-neutral-300">Quote</label>
+                    {{ form.quote(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Rating (1-5)</label>
+                        {{ form.rating(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-neutral-300">Avatar Image</label>
+                        {{ form.avatar(class="text-sm text-neutral-400") }}
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
+                    {{ form.is_published(class="w-4 h-4") }}
+                    <label class="text-sm font-medium text-neutral-300">Publish to Website</label>
+                </div>
+                <div class="flex gap-4 pt-6">
+                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Testimonial</button>
+                    <a href="{{ url_for('manage_testimonials') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

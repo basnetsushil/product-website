@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Product Website{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>{{ article.title }}</h1>
+        <p class="article-meta">
+            By {{ article.author }} | {{ article.created_at.strftime('%B %d, %Y') }}
+        </p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="article-detail">
+            {% if article.featured_image %}
+                <img src="{{ url_for('static', filename='uploads/articles/' + article.featured_image) }}" alt="{{ article.title }}" class="article-detail-image">
+            {% endif %}
+            
+            <div class="article-detail-content">
+                {{ article.content }}
+            </div>
+        </div>
+
+        <!-- Related Articles -->
+        {% if related_articles %}
+        <div class="related-articles">
+            <h3>Related Articles</h3>
+            <div class="grid grid-3">
+                {% for related_article in related_articles %}
+                <div class="article-card">
+                    {% if related_article.featured_image %}
+                        <img src="{{ url_for('static', filename='uploads/articles/' + related_article.featured_image) }}" alt="{{ related_article.title }}" class="article-image">
+                    {% else %}
+                        <div class="article-image-placeholder">No Image</div>
+                    {% endif %}
+                    <div class="article-card-content">
+                        <h3>{{ related_article.title }}</h3>
+                        <p class="article-meta">{{ related_article.created_at.strftime('%B %d, %Y') }}</p>
+                        <a href="{{ url_for('article_detail', slug=related_article.slug) }}" class="btn btn-small">Read More</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="back-link">
+            <a href="{{ url_for('articles') }}">&larr; Back to Articles</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

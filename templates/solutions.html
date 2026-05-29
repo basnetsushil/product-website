@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Solutions - Product Website{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Our Solutions</h1>
+        <p>Comprehensive solutions tailored to your business needs</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="grid grid-2">
+            {% for solution in solutions %}
+            <div class="solution-card">
+                {% if solution.image %}
+                    <img src="{{ url_for('static', filename='uploads/solutions/' + solution.image) }}" alt="{{ solution.title }}" class="solution-image">
+                {% else %}
+                    <div class="solution-image-placeholder">No Image</div>
+                {% endif %}
+                <div class="solution-content">
+                    <h2>{{ solution.title }}</h2>
+                    <p>{{ solution.description }}</p>
+                    {% if solution.features %}
+                    <h4>Key Features:</h4>
+                    <ul>
+                        {% for feature in solution.features.split(',') %}
+                        <li>{{ feature.strip() }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary">Request Demo</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if not solutions %}
+<div class="container">
+    <p class="text-center">No solutions available at the moment.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Testimonials - Product Website{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Testimonials</h1>
+        <p>What our satisfied clients have to say</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="grid grid-2">
+            {% for testimonial in testimonials %}
+            <div class="testimonial-card-large">
+                {% if testimonial.image %}
+                    <img src="{{ url_for('static', filename='uploads/testimonials/' + testimonial.image) }}" alt="{{ testimonial.client_name }}" class="testimonial-image-large">
+                {% else %}
+                    <div class="testimonial-image-placeholder-large">No Image</div>
+                {% endif %}
+                <div class="testimonial-body">
+                    <div class="rating">
+                        {% for i in range(testimonial.rating) %}
+                            <span class="star">★</span>
+                        {% endfor %}
+                    </div>
+                    <p class="testimonial-text">"{{ testimonial.content }}"</p>
+                    <p class="testimonial-author">{{ testimonial.client_name }}</p>
+                    {% if testimonial.company %}
+                        <p class="testimonial-company">{{ testimonial.position }} at {{ testimonial.company }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if not testimonials %}
+<div class="container">
+    <p class="text-center">No testimonials available at the moment.</p>
+</div>
+{% endif %}
+{% endblock %}
