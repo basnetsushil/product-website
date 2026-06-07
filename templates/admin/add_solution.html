@@ -1,60 +1,102 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Add Solution{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_solutions') }}">Solutions</a>
+<span class="bc-sep">/</span><span>Add</span>
+{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold text-gradient mb-10">Add AI Solution</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
-                {{ form.hidden_tag() }}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Solution Title</label>
-                        {{ form.title(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Icon (Emoji or Class)</label>
-                        {{ form.icon_class(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Description</label>
-                    {{ form.description(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 1</label>
-                        {{ form.benefit_1(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 2</label>
-                        {{ form.benefit_2(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-xs font-semibold text-neutral-400 uppercase">Benefit 3</label>
-                        {{ form.benefit_3(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 text-sm") }}
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Image Upload</label>
-                        {{ form.image(class="text-sm text-neutral-400") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Display Order (Index)</label>
-                        {{ form.order_index(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
-                    {{ form.is_published(class="w-4 h-4") }}
-                    <label class="text-sm font-medium text-neutral-300">Publish to Homepage</label>
-                </div>
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Solution</button>
-                    <a href="{{ url_for('manage_solutions') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="page-header">
+    <h1 class="page-title">Add New Solution</h1>
+    <a href="{{ url_for('admin_solutions') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-input") }}
+                {% for e in form.title.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.icon_class.label(class="form-label") }}
+                {{ form.icon_class(class="form-input", placeholder="fas fa-robot") }}
+                <span class="field-hint">Font Awesome class — <a href="https://fontawesome.com/icons" target="_blank">Browse icons</a></span>
+                {% for e in form.icon_class.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-input form-textarea", rows=5) }}
+            {% for e in form.description.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-section-title">Key Benefits</div>
+        <div class="form-grid form-grid-3">
+            <div class="form-group">
+                {{ form.benefit_1.label(class="form-label") }}
+                {{ form.benefit_1(class="form-input", placeholder="e.g. 70% cost reduction") }}
+                {% for e in form.benefit_1.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.benefit_2.label(class="form-label") }}
+                {{ form.benefit_2(class="form-input") }}
+                {% for e in form.benefit_2.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.benefit_3.label(class="form-label") }}
+                {{ form.benefit_3(class="form-input") }}
+                {% for e in form.benefit_3.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.anchor_id.label(class="form-label") }}
+                {{ form.anchor_id(class="form-input", placeholder="e.g. automation") }}
+                <span class="field-hint">Used for page anchor links e.g. /solutions#automation</span>
+                {% for e in form.anchor_id.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.order_index.label(class="form-label") }}
+                {{ form.order_index(class="form-input") }}
+                {% for e in form.order_index.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Solution Image <span class="label-hint">(optional)</span></label>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload or drag & drop</p>
+                    <span>JPG, PNG, GIF, WEBP — max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview" style="display:none" alt="Preview">
+            </div>
+            {{ form.image(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.image.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_published(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Publish solution
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_solutions') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');    
+</script>
 {% endblock %}

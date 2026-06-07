@@ -1,90 +1,87 @@
-{% extends "base.html" %}
-
-{% block title %}Edit Testimonial - Admin{% endblock %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Edit Testimonial{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_testimonials') }}">Testimonials</a>
+<span class="bc-sep">/</span><span>Edit</span>
+{% endblock %}
 
 {% block content %}
-<div class="admin-container">
-    <div class="admin-sidebar">
-        <h2>Admin Menu</h2>
-        <ul class="admin-menu">
-            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('manage_events') }}">Events</a></li>
-            <li><a href="{{ url_for('manage_articles') }}">Articles</a></li>
-            <li><a href="{{ url_for('manage_testimonials') }}" class="active">Testimonials</a></li>
-            <li><a href="{{ url_for('manage_solutions') }}">Solutions</a></li>
-            <li><a href="{{ url_for('manage_team') }}">Team Members</a></li>
-            <li><a href="{{ url_for('manage_enquiries') }}">Enquiries</a></li>
-            <li><a href="{{ url_for('settings') }}">Settings</a></li>
-            <li><a href="{{ url_for('admin_logout') }}" class="logout">Logout</a></li>
-        </ul>
-    </div>
-
-    <div class="admin-content">
-        <h1>Edit Testimonial</h1>
-        
-        <form method="POST" enctype="multipart/form-data" class="form">
-            {{ form.hidden_tag() }}
-            
-            <div class="form-group">
-                {{ form.client_name.label }}
-                {{ form.client_name(class="form-control") }}
-                {% if form.client_name.errors %}
-                    <span class="form-error">{{ form.client_name.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.company.label }}
-                {{ form.company(class="form-control") }}
-                {% if form.company.errors %}
-                    <span class="form-error">{{ form.company.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.position.label }}
-                {{ form.position(class="form-control") }}
-                {% if form.position.errors %}
-                    <span class="form-error">{{ form.position.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.content.label }}
-                {{ form.content(class="form-control", rows="6") }}
-                {% if form.content.errors %}
-                    <span class="form-error">{{ form.content.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.rating.label }}
-                {{ form.rating(class="form-control", type="number", min="1", max="5") }}
-                {% if form.rating.errors %}
-                    <span class="form-error">{{ form.rating.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.image.label }}
-                {% if testimonial.image %}
-                    <p>Current image: {{ testimonial.image }}</p>
-                {% endif %}
-                {{ form.image(class="form-control") }}
-                {% if form.image.errors %}
-                    <span class="form-error">{{ form.image.errors[0] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.published() }} {{ form.published.label }}
-            </div>
-
-            <div class="form-actions">
-                {{ form.submit(value="Update Testimonial", class="btn btn-primary") }}
-                <a href="{{ url_for('manage_testimonials') }}" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
-    </div>
+<div class="page-header">
+    <h1 class="page-title">Edit Testimonial</h1>
+    <a href="{{ url_for('admin_testimonials') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.customer_name.label(class="form-label") }}
+                {{ form.customer_name(class="form-input") }}
+                {% for e in form.customer_name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.company.label(class="form-label") }}
+                {{ form.company(class="form-input") }}
+                {% for e in form.company.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.job_title.label(class="form-label") }}
+                {{ form.job_title(class="form-input") }}
+                {% for e in form.job_title.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.rating.label(class="form-label") }}
+                {{ form.rating(class="form-input form-select") }}
+                {% for e in form.rating.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.quote.label(class="form-label") }}
+            {{ form.quote(class="form-input form-textarea", rows=5) }}
+            {% for e in form.quote.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Avatar Photo <span class="label-hint">(leave blank to keep current)</span></label>
+            {% if testimonial.avatar %}
+            <div class="current-image-wrap">
+                <img src="{{ url_for('static', filename=testimonial.avatar) }}" alt="Current" class="current-image current-image--avatar">
+                <span class="current-image-label">Current avatar</span>
+            </div>
+            {% endif %}
+            <div class="upload-zone upload-zone--avatar" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-user-circle"></i>
+                    <p>{{ 'Change avatar' if testimonial.avatar else 'Upload avatar' }}</p>
+                    <span>JPG, PNG, max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview upload-preview--avatar" style="display:none" alt="Preview">
+            </div>
+            {{ form.avatar(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.avatar.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_published(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Published
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_testimonials') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');
+</script>
 {% endblock %}

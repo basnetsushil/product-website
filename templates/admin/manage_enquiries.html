@@ -1,82 +1,59 @@
-{% extends "base.html" %}
-
-{% block title %}Manage Enquiries - Admin{% endblock %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Enquiries{% endblock %}
+{% block breadcrumb %}<span class="bc-sep">/</span><span>Enquiries</span>{% endblock %}
 
 {% block content %}
-<div class="admin-container">
-    <div class="admin-sidebar">
-        <h2>Admin Menu</h2>
-        <ul class="admin-menu">
-            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('manage_events') }}">Events</a></li>
-            <li><a href="{{ url_for('manage_articles') }}">Articles</a></li>
-            <li><a href="{{ url_for('manage_testimonials') }}">Testimonials</a></li>
-            <li><a href="{{ url_for('manage_solutions') }}">Solutions</a></li>
-            <li><a href="{{ url_for('manage_team') }}">Team Members</a></li>
-            <li><a href="{{ url_for('manage_enquiries') }}" class="active">Enquiries</a></li>
-            <li><a href="{{ url_for('settings') }}">Settings</a></li>
-            <li><a href="{{ url_for('admin_logout') }}" class="logout">Logout</a></li>
-        </ul>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Enquiries</h1>
+        <p class="page-subtitle">{{ enquiries|length }} total enquiries received</p>
     </div>
+    <a href="{{ url_for('export_csv') }}" class="btn-secondary"><i class="fas fa-download"></i> Export CSV</a>
+</div>
 
-    <div class="admin-content">
-        <div class="admin-header">
-            <h1>Manage Enquiries</h1>
-        </div>
-
-        {% if enquiries.items %}
+<div class="admin-card">
+    {% if enquiries %}
+    <div class="table-wrap">
         <table class="admin-table">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Subject</th>
-                    <th>Status</th>
+                    <th>Company</th>
+                    <th>Country</th>
                     <th>Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for enquiry in enquiries.items %}
+                {% for e in enquiries %}
                 <tr>
-                    <td>{{ enquiry.name }}</td>
-                    <td>{{ enquiry.email }}</td>
-                    <td>{{ enquiry.subject }}</td>
-                    <td><span class="badge badge-{{ enquiry.status }}">{{ enquiry.status }}</span></td>
-                    <td>{{ enquiry.created_at.strftime('%Y-%m-%d') }}</td>
-                    <td>
-                        <a href="{{ url_for('enquiry_detail', id=enquiry.id) }}" class="btn btn-small btn-info">View</a>
-                        <form method="POST" action="{{ url_for('delete_enquiry', id=enquiry.id) }}" style="display:inline;">
-                            <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                    <td><span class="id-badge">{{ e.id }}</span></td>
+                    <td><strong>{{ e.name }}</strong></td>
+                    <td>{{ e.email }}</td>
+                    <td>{{ e.company or '—' }}</td>
+                    <td>{{ e.country or '—' }}</td>
+                    <td>{{ e.submitted_at.strftime('%d %b %Y, %H:%M') }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('enquiry_detail', id=e.id) }}" class="btn-action btn-view" title="View"><i class="fas fa-eye"></i></a>
+                        <form method="POST" action="{{ url_for('delete_enquiry', id=e.id) }}" class="inline-form">
+                            {{ csrf_token() if csrf_token is defined }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn-action btn-delete" title="Delete" onclick="confirmDelete(this.closest('form'))"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        {% if enquiries.pages > 1 %}
-        <div class="pagination">
-            {% if enquiries.has_prev %}
-                <a href="{{ url_for('manage_enquiries', page=enquiries.prev_num) }}" class="btn btn-small">Previous</a>
-            {% endif %}
-            {% for page_num in enquiries.iter_pages() %}
-                {% if page_num %}
-                    {% if page_num == enquiries.page %}
-                        <span class="pagination-current">{{ page_num }}</span>
-                    {% else %}
-                        <a href="{{ url_for('manage_enquiries', page=page_num) }}" class="btn btn-small">{{ page_num }}</a>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-            {% if enquiries.has_next %}
-                <a href="{{ url_for('manage_enquiries', page=enquiries.next_num) }}" class="btn btn-small">Next</a>
-            {% endif %}
-        </div>
-        {% endif %}
-        {% else %}
-        <p>No enquiries found.</p>
-        {% endif %}
     </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>No enquiries yet</h3>
+        <p>Enquiries submitted via the contact form will appear here.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

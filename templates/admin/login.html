@@ -1,60 +1,130 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | AI-Solutions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #F7FBF9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        .login-container {
+            background: white;
+            padding: 50px;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .login-header {
+            margin-bottom: 40px;
+        }
+        .login-header i {
+            font-size: 3rem;
+            color: var(--accent-lime);
+            margin-bottom: 20px;
+        }
+        .login-header h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2rem;
+            color: #000;
+            margin-bottom: 10px;
+        }
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #ddd;
+            font-family: 'Poppins';
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-lime);
+            box-shadow: 0 0 0 4px rgba(168, 224, 99, 0.2);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .login-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+        }
+        .return-link {
+            display: block;
+            margin-top: 25px;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+        .return-link:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<div class="min-h-screen flex items-center justify-center px-6 bg-black relative overflow-hidden">
-    <!-- Background Glows (Matching the Landing Page) -->
-    <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div class="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px]"></div>
-    </div>
-
-    <!-- Login Card -->
-    <div class="max-w-md w-full z-10">
-        <div class="glass p-10 rounded-[2.5rem] shadow-2xl border border-white/10 backdrop-blur-xl">
-            <div class="text-center mb-10">
-                <h1 class="text-4xl font-bold text-gradient tracking-tight mb-2">Admin Portal</h1>
-                <p class="text-neutral-400 text-sm">Secure access to AI-Solutions CMS</p>
-            </div>
-
-            <form method="POST" class="space-y-6">
-                {{ form.hidden_tag() }}
-
-                <!-- Username Field -->
-                <div class="space-y-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Username</label>
-                    {{ form.username(class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all", placeholder="Enter admin username") }}
-                </div>
-
-                <!-- Password Field -->
-                <div class="space-y-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Password</label>
-                    {{ form.password(class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all", placeholder="••••••••") }}
-                </div>
-
-                <!-- Remember Me -->
-                <div class="flex items-center gap-3 px-1">
-                    {{ form.remember(class="w-4 h-4 rounded border-white/10 bg-black/40 text-white focus:ring-offset-black") }}
-                    <label class="text-sm text-neutral-400 cursor-pointer select-none">Remember this device</label>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="pt-4">
-                    {{ form.submit(class="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-neutral-200 transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer shadow-lg shadow-white/10") }}
-                </div>
-            </form>
-
-            <!-- Footer link -->
-            <div class="mt-8 text-center">
-                <a href="{{ url_for('index') }}" class="text-xs text-neutral-500 hover:text-white transition-colors">
-                    ← Back to public website
-                </a>
-            </div>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-shield-halved"></i>
+            <h1>Admin Login</h1>
+            <p>Welcome back! Please enter your details to access the Command Center.</p>
         </div>
-        
-        <!-- Bottom Branding -->
-        <p class="text-center text-neutral-600 text-[10px] mt-8 uppercase tracking-[0.2em]">
-            AI-Solutions &copy; {{ datetime.now().year }} | Secure Encryption Active
-        </p>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username(placeholder="Enter username") }}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(placeholder="Enter password") }}
+            </div>
+            {{ form.submit(class="login-btn") }}
+        </form>
+
+        <a href="{{ url_for('index') }}" class="return-link">
+            <i class="fas fa-arrow-left"></i> Return to Website
+        </a>
     </div>
-</div>
-{% endblock %}
+
+</body>
+</html>

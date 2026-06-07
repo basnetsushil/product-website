@@ -1,25 +1,37 @@
 {% extends 'admin/base_admin.html' %}
-{% block title %}Manage Articles{% endblock %}
-{% block breadcrumb %}<span class="bc-sep">/</span><span>Articles</span>{% endblock %}
+{% block title %}Case Studies{% endblock %}
+{% block breadcrumb %}<span class="bc-sep">/</span><span>Case Studies</span>{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Articles</h1>
-        <p class="page-subtitle">{{ articles|length }} article{{ 's' if articles|length != 1 }}</p>
+        <h1 class="page-title">Case Studies</h1>
+        <p class="page-subtitle">Manage your client success stories</p>
     </div>
-    <a href="{{ url_for('add_article') }}" class="btn-primary"><i class="fas fa-plus"></i> Add New Article</a>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_articles') }}" class="btn-secondary"><i class="fas fa-newspaper"></i> Use Articles</a>
+    </div>
 </div>
 
 <div class="admin-card">
-    {% if articles %}
-    <div class="table-wrap">
+    <div class="info-banner">
+        <div class="info-banner-icon"><i class="fas fa-info-circle"></i></div>
+        <div class="info-banner-text">
+            <strong>Case Studies are managed as Articles</strong>
+            <p>To add case studies, create an Article with the category set to <code>Case Study</code>. They will automatically appear in the Case Studies section on the public website.</p>
+        </div>
+        <a href="{{ url_for('add_article') }}" class="btn-primary">
+            <i class="fas fa-plus"></i> Add Case Study
+        </a>
+    </div>
+
+    {% if case_studies %}
+    <div class="table-wrap" style="margin-top:1.5rem">
         <table class="admin-table">
             <thead>
                 <tr>
                     <th>Cover</th>
                     <th>Title</th>
-                    <th>Category</th>
                     <th>Author</th>
                     <th>Status</th>
                     <th>Published</th>
@@ -27,17 +39,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for article in articles %}
+                {% for article in case_studies %}
                 <tr>
                     <td>
                         {% if article.cover_image %}
                             <img src="{{ url_for('static', filename=article.cover_image) }}" alt="" class="table-thumb">
                         {% else %}
-                            <div class="table-thumb-placeholder"><i class="fas fa-newspaper"></i></div>
+                            <div class="table-thumb-placeholder"><i class="fas fa-briefcase"></i></div>
                         {% endif %}
                     </td>
                     <td><strong>{{ article.title }}</strong></td>
-                    <td>{{ article.category or '—' }}</td>
                     <td>{{ article.author }}</td>
                     <td>
                         {% if article.is_published %}
@@ -48,8 +59,8 @@
                     </td>
                     <td>{{ article.published_at.strftime('%d %b %Y') }}</td>
                     <td class="actions-cell">
-                        <a href="{{ url_for('article_detail', id=article.id) }}" class="btn-action btn-view" title="View" target="_blank"><i class="fas fa-eye"></i></a>
-                        <a href="{{ url_for('edit_article', id=article.id) }}" class="btn-action btn-edit" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="{{ url_for('article_detail', id=article.id) }}" class="btn-action btn-view" target="_blank"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('edit_article', id=article.id) }}" class="btn-action btn-edit"><i class="fas fa-pencil-alt"></i></a>
                         <form method="POST" action="{{ url_for('delete_article', id=article.id) }}" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="button" class="btn-action btn-delete" onclick="confirmDelete(this.closest('form'))"><i class="fas fa-trash"></i></button>
@@ -61,11 +72,11 @@
         </table>
     </div>
     {% else %}
-    <div class="empty-state">
-        <i class="fas fa-newspaper"></i>
-        <h3>No articles yet</h3>
-        <p>Publish your first article to get started.</p>
-        <a href="{{ url_for('add_article') }}" class="btn-primary">Add Article</a>
+    <div class="empty-state" style="margin-top:1.5rem">
+        <i class="fas fa-briefcase"></i>
+        <h3>No case studies yet</h3>
+        <p>Create an article with category "Case Study" to add your first case study.</p>
+        <a href="{{ url_for('add_article') }}" class="btn-primary">Add Case Study</a>
     </div>
     {% endif %}
 </div>

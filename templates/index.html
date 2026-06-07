@@ -1,156 +1,437 @@
 {% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Hero: full-screen, edge-to-edge, no outer gaps ──────────── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;                 /* ZERO outer padding — content padding goes inside columns */
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--bdr);
+}
+
+/* Ghost watermark & ticker stay behind everything */
+.hero-ghost,
+.hero-ticker { z-index: 0; }
+
+/* Full-width two-column grid — no max-width, no margin, truly 100vw */
+.hero-split {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+}
+
+/* Left column — all content padding lives in HERE */
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 120px 56px 80px 60px;
+  position: relative;
+  z-index: 3;
+  overflow: hidden;
+}
+
+/* Heading — sized to fit comfortably in exactly 50vw */
+.hero .hero-heading {
+  font-size: clamp(2.2rem, 3.8vw, 5rem);
+  max-width: 100%;
+  margin-bottom: 24px;
+  line-height: 1.0;
+  white-space: nowrap;
+}
+
+/* "Delivered." is the shortest line, can wrap freely */
+.hero .hero-heading .line-acc {
+  white-space: normal;
+  display: block;
+}
+
+.hero .hero-desc {
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 380px;
+  line-height: 1.75;
+  margin-bottom: 40px;
+}
+
+.hero-eyebrow {
+  margin-bottom: 20px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Right column — must have explicit height so absolute child renders */
+.hero-right {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 100vh;    /* matches the left column which drives the row height */
+}
+
+/* Spline wrapper covers the full right column absolutely */
+.hero-spline-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Subtle top spotlight glow */
+.hero-spline-spotlight {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 50%;
+  background: radial-gradient(ellipse at center top,
+    rgba(255,255,255,0.055) 0%,
+    rgba(255,255,255,0.015) 50%,
+    transparent 75%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Spline web component — fill the full right half */
+spline-viewer.hero-spline {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+}
+
+/* Cover the "Built with Spline" badge */
+.hero-spline-mask {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 200px;
+  height: 56px;
+  background: var(--bg);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Scroll indicator */
+.hero-scroll {
+  bottom: 40px;
+  right: 32px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero .hero-heading {
+    font-size: clamp(2rem, 4vw, 4rem);
+    white-space: normal;
+  }
+  .hero-left {
+    padding: 110px 40px 60px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-split {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+  .hero-left {
+    padding: 100px 28px 48px;
+    overflow: visible;
+    min-height: 60vh;
+  }
+  .hero .hero-heading {
+    font-size: clamp(2.4rem, 9vw, 4rem);
+    white-space: normal;
+  }
+  .hero-right {
+    height: 55vw;
+    min-height: 280px;
+  }
+  spline-viewer.hero-spline { min-height: unset; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .hero .hero-heading { font-size: clamp(2rem, 10vw, 3rem); }
+  .hero-right { height: 70vw; }
+}
+</style>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.28/build/spline-viewer.js"></script>
+{% endblock %}
 
 {% block content %}
-<!-- HERO SECTION -->
-<section class="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-    <!-- Spotlight Background Effect -->
-    <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div class="absolute -top-20 -left-20 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px]"></div>
-        <div class="absolute top-1/2 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-ghost">AI</div>
+  <div class="hero-ticker">
+    <div class="hero-ticker-inner">
+      <span>AUTOMATE</span><span>→</span>
+      <span>INNOVATE</span><span>→</span>
+      <span>ELEVATE</span><span>→</span>
+      <span>OPTIMISE</span><span>→</span>
+      <span>AUTOMATE</span><span>→</span>
+      <span>INNOVATE</span><span>→</span>
+      <span>ELEVATE</span><span>→</span>
+      <span>OPTIMISE</span><span>→</span>
     </div>
+  </div>
 
-    <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
-        <!-- Left Content -->
-        <div class="flex flex-col space-y-6 animate-slide-up">
-            <div class="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-neutral-300 w-fit">
-                🚀 Based in Sunderland, UK
-            </div>
-            <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-gradient leading-tight">
-                Redefining the <br> Digital Employee <br> Experience
-            </h1>
-            <p class="text-neutral-400 text-lg md:text-xl max-w-lg leading-relaxed">
-                AI-Solutions leverages cutting-edge AI to accelerate design, engineering, and innovation. 
-                We provide <span class="text-white font-semibold">affordable AI prototyping</span> and 
-                <span class="text-white font-semibold">intelligent virtual assistants</span> to empower 
-                the global workforce.
-            </p>
-            <div class="flex gap-4 pt-4">
-                <a href="{{ url_for('solutions') }}" class="bg-white text-black px-8 py-4 rounded-full font-bold hover:bg-neutral-200 transition-all transform hover:scale-105">
-                    Our AI Solutions
-                </a>
-                <a href="{{ url_for('contact') }}" class="glass px-8 py-4 rounded-full font-bold hover:bg-white/10 transition-all">
-                    Request a Prototype
-                </a>
-            </div>
-        </div>
+  <!-- Split layout -->
+  <div class="hero-split">
 
-        <!-- Right Content (The 3D Scene) -->
-<div class="relative h-[500px] md:h-[700px] w-full animate-fade-in overflow-hidden">
-    <!-- 
-      The wrapper div below is key: 
-      1. We make it absolute and slightly larger than the container.
-      2. We use translate-y to push the bottom of the scene (and the logo) 
-         outside the visible area of the parent.
-    -->
-    <div class="absolute inset-0 w-full h-[calc(100%+60px)] transform translate-y-[-10px]">
-        <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"></spline-viewer>
-    </div>
-    
-    <!-- Decorative Glow behind robot -->
-    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
-</div>
-</section>
-
-<!-- FEATURED SOLUTIONS PREVIEW -->
-<section class="py-24 px-6 bg-black">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-5xl font-bold text-gradient mb-4">Our AI Capabilities</h2>
-            <p class="text-neutral-400">Empowering businesses with next-gen automation.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {% for solution in solutions %}
-            <div class="glass p-8 rounded-3xl group hover:border-white/30 transition-all transform hover:-translate-y-2">
-                <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white group-hover:text-black transition-all">
-                    <span class="text-2xl">{{ solution.icon_class if solution.icon_class else '🤖' }}</span>
-                </div>
-                <h3 class="text-xl font-bold mb-3">{{ solution.title }}</h3>
-                <p class="text-neutral-400 text-sm mb-6">{{ solution.description }}</p>
-                <ul class="text-xs text-neutral-500 space-y-2">
-                    <li class="flex items-center gap-2">✅ {{ solution.benefit_1 }}</li>
-                    <li class="flex items-center gap-2">✅ {{ solution.benefit_2 }}</li>
-                    <li class="flex items-center gap-2">✅ {{ solution.benefit_3 }}</li>
-                </ul>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- TESTIMONIALS PREVIEW -->
-<section class="py-24 px-6 relative overflow-hidden">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-5xl font-bold text-gradient mb-4">Trusted by Innovators</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {% for t in testimonials %}
-            <div class="glass p-8 rounded-3xl relative">
-                <div class="flex items-center gap-4 mb-6">
-                    {% if t.avatar %}
-                        <img src="{{ url_for('static', filename=t.avatar) }}" class="w-12 h-12 rounded-full object-cover border border-white/20">
-                    {% else %}
-                        <div class="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">👤</div>
-                    {% endif %}
-                    <div>
-                        <h4 class="font-bold text-sm">{{ t.customer_name }}</h4>
-                        <p class="text-xs text-neutral-500">{{ t.job_title }} @ {{ t.company }}</p>
-                    </div>
-                </div>
-                <p class="text-neutral-300 italic text-sm leading-relaxed">"{{ t.quote }}"</p>
-                <div class="mt-4 text-yellow-500 text-xs">
-                    {% for i in range(t.rating) %}★{% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- LATEST INSIGHTS -->
-<section class="py-24 px-6 bg-black">
-    <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-end mb-12">
-            <div>
-                <h2 class="text-3xl md:text-5xl font-bold text-gradient mb-4">Latest Insights</h2>
-                <p class="text-neutral-400">Deep dives into the world of AI.</p>
-            </div>
-            <a href="{{ url_for('articles') }}" class="hidden md:block text-sm font-semibold border-b border-white/20 hover:border-white transition-all pb-1">View all articles →</a>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {% for article in articles %}
-            <a href="{{ url_for('article_detail', id=article.id) }}" class="group">
-                <div class="relative aspect-video rounded-3xl overflow-hidden mb-4">
-                    {% if article.cover_image %}
-                        <img src="{{ url_for('static', filename=article.cover_image) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    {% else %}
-                        <div class="w-full h-full bg-neutral-900 flex items-center justify-center">No Image</div>
-                    {% endif %}
-                    <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                        {{ article.category }}
-                    </div>
-                </div>
-                <h3 class="text-xl font-bold mb-2 group-hover:text-neutral-300 transition-colors">{{ article.title }}</h3>
-                <p class="text-neutral-500 text-sm line-clamp-2">{{ article.excerpt }}</p>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- FINAL CTA -->
-<section class="py-24 px-6">
-    <div class="max-w-5xl mx-auto glass p-12 rounded-[3rem] text-center relative overflow-hidden">
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-        <h2 class="text-4xl md:text-6xl font-bold text-gradient mb-6">Ready to scale with AI?</h2>
-        <p class="text-neutral-400 mb-10 max-w-2xl mx-auto">Join the ranks of industry leaders optimizing their workflow with AI-Solutions.</p>
-        <a href="{{ url_for('contact') }}" class="bg-white text-black px-10 py-4 rounded-full font-bold hover:bg-neutral-200 transition-all inline-block">
-            Start Your Transformation
+    <!-- LEFT: Content -->
+    <div class="hero-left">
+      <div class="hero-eyebrow">Enterprise AI Platform</div>
+      <h1 class="hero-heading">
+        <span>Enterprise</span><br>
+        <span class="line-outline">Intelligence</span><br>
+        <span class="line-acc">Delivered.</span>
+      </h1>
+      <p class="hero-desc">
+        We build AI systems that automate operations, unlock insights, and give forward-thinking businesses a durable competitive edge.
+      </p>
+      <div class="hero-actions">
+        <a href="{{ url_for('solutions') }}" class="btn btn-primary">
+          <span>Our Solutions</span>
+          <i class="fas fa-arrow-up-right"></i>
         </a>
+        <a href="{{ url_for('contact') }}" class="btn btn-outline">
+          <span>Get in Touch</span>
+        </a>
+      </div>
     </div>
+
+    <!-- RIGHT: Spline 3D Scene -->
+    <div class="hero-right">
+      <div class="hero-spline-wrap">
+        <div class="hero-spline-spotlight"></div>
+        <spline-viewer
+          url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+          class="hero-spline"
+          id="hero-spline"
+          loading-anim-type="none"
+        ></spline-viewer>
+        <div class="hero-spline-mask"></div>
+      </div>
+    </div>
+
+  </div>
+  
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- Stats -->
+<section class="stats-row">
+  <div class="stat-item">
+    <div class="stat-number"><span class="count-up" data-target="70">70</span><span>%</span></div>
+    <div class="stat-label">Reduction in manual processing</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number"><span class="count-up" data-target="50">50</span><span>+</span></div>
+    <div class="stat-label">Businesses transformed</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number"><span class="count-up" data-target="99">99</span><span>.8%</span></div>
+    <div class="stat-label">Defect detection accuracy</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-number"><span class="count-up" data-target="12">12</span><span>mo</span></div>
+    <div class="stat-label">Average ROI payback period</div>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Process Automation</span>
+    <span class="marquee-item">Predictive Analytics</span>
+    <span class="marquee-item">Natural Language Processing</span>
+    <span class="marquee-item">Computer Vision</span>
+    <span class="marquee-item">AI Consulting</span>
+    <span class="marquee-item">Custom ML Models</span>
+    <span class="marquee-item">Process Automation</span>
+    <span class="marquee-item">Predictive Analytics</span>
+    <span class="marquee-item">Natural Language Processing</span>
+    <span class="marquee-item">Computer Vision</span>
+    <span class="marquee-item">AI Consulting</span>
+    <span class="marquee-item">Custom ML Models</span>
+  </div>
+</div>
+
+<!-- Solutions Preview -->
+{% if solutions %}
+<section class="section">
+  <div class="section-label">What We Do</div>
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:48px; gap:24px; flex-wrap:wrap;">
+    <h2 class="section-title">AI that moves<br>your business <span>forward</span></h2>
+    <a href="{{ url_for('solutions') }}" class="btn-arrow">
+      <span>All Solutions</span>
+      <span class="arrow-icon"><i class="fas fa-arrow-up-right"></i></span>
+    </a>
+  </div>
+  <div class="grid-3">
+    {% for sol in solutions %}
+    <div class="solution-card">
+      <div class="solution-icon"><i class="{{ sol.icon_class or 'fas fa-robot' }}"></i></div>
+      <h3>{{ sol.title }}</h3>
+      <p>{{ sol.description[:160] }}{% if sol.description|length > 160 %}...{% endif %}</p>
+      {% if sol.benefit_1 or sol.benefit_2 or sol.benefit_3 %}
+      <div class="solution-benefits">
+        {% if sol.benefit_1 %}<div class="benefit-item">{{ sol.benefit_1 }}</div>{% endif %}
+        {% if sol.benefit_2 %}<div class="benefit-item">{{ sol.benefit_2 }}</div>{% endif %}
+        {% if sol.benefit_3 %}<div class="benefit-item">{{ sol.benefit_3 }}</div>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Testimonials -->
+{% if testimonials %}
+<section style="border-top:1px solid var(--bdr); padding:100px 0; overflow:hidden;">
+  <div style="max-width:1280px; margin:0 auto; padding:0 40px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:48px; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div class="section-label">What Clients Say</div>
+        <h2 class="section-title">Real results,<br><span>real feedback</span></h2>
+      </div>
+      <a href="{{ url_for('testimonials') }}" class="btn-arrow">
+        <span>All Testimonials</span>
+        <span class="arrow-icon"><i class="fas fa-arrow-up-right"></i></span>
+      </a>
+    </div>
+    <div class="grid-3">
+      {% for t in testimonials %}
+      <div class="testimonial-card">
+        <div class="testimonial-quote-mark">"</div>
+        <div class="star-rating">
+          {% for i in range(t.rating) %}<i class="fas fa-star"></i>{% endfor %}
+          {% for i in range(5 - t.rating) %}<i class="far fa-star" style="color:var(--bdr)"></i>{% endfor %}
+        </div>
+        <p class="testimonial-text">"{{ t.quote }}"</p>
+        <div class="testimonial-author">
+          {% if t.avatar %}
+            <img src="{{ url_for('static', filename=t.avatar) }}" alt="{{ t.customer_name }}" class="testimonial-avatar">
+          {% else %}
+            <div class="testimonial-avatar-placeholder">{{ t.customer_name[0] }}</div>
+          {% endif %}
+          <div>
+            <div class="testimonial-name">{{ t.customer_name }}</div>
+            <div class="testimonial-role">{{ t.job_title }}{% if t.company %}, {{ t.company }}{% endif %}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Latest Articles -->
+{% if articles %}
+<section style="border-top:1px solid var(--bdr); padding:100px 0;">
+  <div style="max-width:1280px; margin:0 auto; padding:0 40px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:48px; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div class="section-label">Knowledge Hub</div>
+        <h2 class="section-title">Latest<br><span>insights</span></h2>
+      </div>
+      <a href="{{ url_for('articles') }}" class="btn-arrow">
+        <span>All Articles</span>
+        <span class="arrow-icon"><i class="fas fa-arrow-up-right"></i></span>
+      </a>
+    </div>
+    <div class="grid-3">
+      {% for article in articles %}
+      <a href="{{ url_for('article_detail', id=article.id) }}" class="article-card" style="display:flex; flex-direction:column; text-decoration:none;">
+        <div class="article-card-img-wrap">
+          {% if article.cover_image %}
+            <img src="{{ url_for('static', filename=article.cover_image) }}" alt="{{ article.title }}" class="article-card-img">
+          {% else %}
+            <div class="article-card-img-placeholder"><i class="fas fa-newspaper"></i></div>
+          {% endif %}
+        </div>
+        <div class="article-card-body">
+          {% if article.category %}<div class="article-category">{{ article.category }}</div>{% endif %}
+          <h3 class="article-title">{{ article.title }}</h3>
+          {% if article.excerpt %}<p class="article-excerpt">{{ article.excerpt[:120] }}{% if article.excerpt|length > 120 %}...{% endif %}</p>{% endif %}
+          <div class="article-meta">
+            <span>{{ article.author }}</span>
+            <span>{{ article.published_at.strftime('%d %b %Y') }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Team preview -->
+{% if team %}
+<section style="border-top:1px solid var(--bdr); padding:100px 0;" id="team">
+  <div style="max-width:1280px; margin:0 auto; padding:0 40px;">
+    <div class="section-label">The Team</div>
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:48px; gap:24px; flex-wrap:wrap;">
+      <h2 class="section-title">Minds behind<br>the <span>machine</span></h2>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1px; background:var(--bdr);">
+      {% for member in team %}
+      <div class="team-card">
+        {% if member.photo %}
+          <img src="{{ url_for('static', filename=member.photo) }}" alt="{{ member.name }}" class="team-photo">
+        {% else %}
+          <div class="team-photo-placeholder">{{ member.name[0] }}</div>
+        {% endif %}
+        <div class="team-name">{{ member.name }}</div>
+        <div class="team-role">{{ member.job_title }}</div>
+        <p class="team-bio">{{ member.bio[:140] }}{% if member.bio and member.bio|length > 140 %}...{% endif %}</p>
+        {% if member.linkedin_url %}
+        <a href="{{ member.linkedin_url }}" target="_blank" class="arrow-link" style="margin-top:16px; font-size:0.72rem;">
+          LinkedIn <i class="fas fa-arrow-up-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA Banner -->
+<section style="border-top:1px solid var(--bdr); padding:120px 40px; text-align:center; position:relative; overflow:hidden;">
+  <div style="font-family:var(--font-display); font-size:clamp(100px,18vw,180px); font-weight:800; color:var(--fg); opacity:0.03; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); white-space:nowrap; pointer-events:none;">READY</div>
+  <div style="position:relative; z-index:1;">
+    <div class="section-label" style="justify-content:center;">Start Your Journey</div>
+    <h2 style="font-family:var(--font-display); font-size:clamp(2.5rem,6vw,5rem); font-weight:800; letter-spacing:-0.04em; line-height:1; margin-bottom:24px;">
+      Ready to build<br>smarter systems?
+    </h2>
+    <p style="color:var(--muted); max-width:480px; margin:0 auto 40px; line-height:1.7;">
+      Let's talk about your specific challenges and design an AI solution that delivers measurable results.
+    </p>
+    <a href="{{ url_for('contact') }}" class="btn btn-primary" style="font-size:0.85rem;">
+      <span>Start the Conversation</span>
+      <i class="fas fa-arrow-up-right"></i>
+    </a>
+  </div>
 </section>
 
 {% endblock %}

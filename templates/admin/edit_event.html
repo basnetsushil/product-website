@@ -1,78 +1,85 @@
-{% extends "base.html" %}
-
-{% block title %}Edit Event - Admin{% endblock %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Edit Event{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_events') }}">Events</a>
+<span class="bc-sep">/</span><span>Edit</span>
+{% endblock %}
 
 {% block content %}
-<div class="admin-container">
-    <div class="admin-sidebar">
-        <h2>Admin Menu</h2>
-        <ul class="admin-menu">
-            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('manage_events') }}" class="active">Events</a></li>
-            <li><a href="{{ url_for('manage_articles') }}">Articles</a></li>
-            <li><a href="{{ url_for('manage_testimonials') }}">Testimonials</a></li>
-            <li><a href="{{ url_for('manage_solutions') }}">Solutions</a></li>
-            <li><a href="{{ url_for('manage_team') }}">Team Members</a></li>
-            <li><a href="{{ url_for('manage_enquiries') }}">Enquiries</a></li>
-            <li><a href="{{ url_for('settings') }}">Settings</a></li>
-            <li><a href="{{ url_for('admin_logout') }}" class="logout">Logout</a></li>
-        </ul>
-    </div>
+<div class="page-header">
+    <h1 class="page-title">Edit Event</h1>
+    <a href="{{ url_for('admin_events') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
 
-    <div class="admin-content">
-        <h1>Edit Event</h1>
-        
-        <form method="POST" enctype="multipart/form-data" class="form">
-            {{ form.hidden_tag() }}
-            
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid form-grid-2">
             <div class="form-group">
-                {{ form.title.label }}
-                {{ form.title(class="form-control") }}
-                {% if form.title.errors %}
-                    <span class="form-error">{{ form.title.errors[0] }}</span>
-                {% endif %}
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-input") }}
+                {% for e in form.name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
             </div>
-
             <div class="form-group">
-                {{ form.description.label }}
-                {{ form.description(class="form-control", rows="6") }}
-                {% if form.description.errors %}
-                    <span class="form-error">{{ form.description.errors[0] }}</span>
-                {% endif %}
+                {{ form.location.label(class="form-label") }}
+                {{ form.location(class="form-input") }}
+                {% for e in form.location.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
             </div>
+        </div>
 
+        <div class="form-grid form-grid-2">
             <div class="form-group">
-                {{ form.date.label }}
-                {{ form.date(class="form-control", type="datetime-local") }}
-                {% if form.date.errors %}
-                    <span class="form-error">{{ form.date.errors[0] }}</span>
-                {% endif %}
+                {{ form.event_date.label(class="form-label") }}
+                {{ form.event_date(class="form-input") }}
+                {% for e in form.event_date.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
             </div>
-
             <div class="form-group">
-                {{ form.location.label }}
-                {{ form.location(class="form-control") }}
-                {% if form.location.errors %}
-                    <span class="form-error">{{ form.location.errors[0] }}</span>
-                {% endif %}
+                {{ form.register_link.label(class="form-label") }}
+                {{ form.register_link(class="form-input") }}
+                {% for e in form.register_link.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
             </div>
+        </div>
 
-            <div class="form-group">
-                {{ form.image.label }}
-                {% if event.image %}
-                    <p>Current image: {{ event.image }}</p>
-                {% endif %}
-                {{ form.image(class="form-control") }}
-                {% if form.image.errors %}
-                    <span class="form-error">{{ form.image.errors[0] }}</span>
-                {% endif %}
-            </div>
+        <div class="form-group">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-input form-textarea", rows=5) }}
+            {% for e in form.description.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
 
-            <div class="form-actions">
-                {{ form.submit(value="Update Event", class="btn btn-primary") }}
-                <a href="{{ url_for('manage_events') }}" class="btn btn-secondary">Cancel</a>
+        <div class="form-group">
+            <label class="form-label">Event Image <span class="label-hint">(leave blank to keep current)</span></label>
+            {% if event.image %}
+            <div class="current-image-wrap">
+                <img src="{{ url_for('static', filename=event.image) }}" alt="Current" class="current-image">
+                <span class="current-image-label">Current image</span>
             </div>
-        </form>
-    </div>
+            {% endif %}
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>{{ 'Change image' if event.image else 'Click to upload' }}</p>
+                    <span>JPG, PNG, GIF, WEBP — max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview" style="display:none" alt="Preview">
+            </div>
+            {{ form.image(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.image.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_upcoming(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Mark as Upcoming Event
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_events') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
 </div>
 {% endblock %}
+{% block extra_scripts %}<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');</script>{% endblock %}

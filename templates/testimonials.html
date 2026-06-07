@@ -1,46 +1,90 @@
 {% extends "base.html" %}
-
-{% block title %}Testimonials - Product Website{% endblock %}
+{% block title %}Testimonials{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="container">
-        <h1>Testimonials</h1>
-        <p>What our satisfied clients have to say</p>
-    </div>
+
+<div class="page-hero">
+  <div class="page-label">Client Voices</div>
+  <h1>What clients<br><span style="color:var(--acc)">say</span></h1>
+  <p>Honest feedback from the businesses we've worked with — in their own words.</p>
 </div>
 
-<section class="section">
-    <div class="container">
-        <div class="grid grid-2">
-            {% for testimonial in testimonials %}
-            <div class="testimonial-card-large">
-                {% if testimonial.image %}
-                    <img src="{{ url_for('static', filename='uploads/testimonials/' + testimonial.image) }}" alt="{{ testimonial.client_name }}" class="testimonial-image-large">
-                {% else %}
-                    <div class="testimonial-image-placeholder-large">No Image</div>
-                {% endif %}
-                <div class="testimonial-body">
-                    <div class="rating">
-                        {% for i in range(testimonial.rating) %}
-                            <span class="star">★</span>
-                        {% endfor %}
-                    </div>
-                    <p class="testimonial-text">"{{ testimonial.content }}"</p>
-                    <p class="testimonial-author">{{ testimonial.client_name }}</p>
-                    {% if testimonial.company %}
-                        <p class="testimonial-company">{{ testimonial.position }} at {{ testimonial.company }}</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+{% if testimonials %}
+<!-- Big feature quote -->
+{% set featured = testimonials[0] %}
+<div style="border-bottom:1px solid var(--bdr); padding:60px 40px; max-width:1280px; margin:0 auto;">
+  <div style="display:grid; grid-template-columns:1fr 2fr; gap:60px; align-items:center;">
+    <div>
+      <div style="font-family:var(--font-display); font-size:clamp(5rem,12vw,10rem); font-weight:800; color:var(--acc); opacity:0.2; line-height:0.8;">"</div>
     </div>
-</section>
+    <div>
+      <div class="star-rating" style="margin-bottom:20px;">
+        {% for i in range(featured.rating) %}<i class="fas fa-star"></i>{% endfor %}
+      </div>
+      <blockquote style="font-family:var(--font-display); font-size:clamp(1.3rem,3vw,2rem); font-weight:600; letter-spacing:-0.02em; line-height:1.35; color:var(--fg); margin-bottom:28px;">
+        "{{ featured.quote }}"
+      </blockquote>
+      <div style="display:flex; align-items:center; gap:16px;">
+        {% if featured.avatar %}
+          <img src="{{ url_for('static', filename=featured.avatar) }}" alt="{{ featured.customer_name }}"
+               style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:1px solid var(--bdr);">
+        {% else %}
+          <div class="testimonial-avatar-placeholder" style="width:52px; height:52px; font-size:1.1rem;">{{ featured.customer_name[0] }}</div>
+        {% endif %}
+        <div>
+          <div style="font-weight:600; font-size:0.95rem;">{{ featured.customer_name }}</div>
+          <div style="font-size:0.75rem; color:var(--muted);">{{ featured.job_title }}{% if featured.company %}, {{ featured.company }}{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-{% if not testimonials %}
-<div class="container">
-    <p class="text-center">No testimonials available at the moment.</p>
+<!-- Grid of remaining -->
+{% if testimonials|length > 1 %}
+<div style="max-width:1280px; margin:0 auto; padding:60px 40px;">
+  <div class="grid-3">
+    {% for t in testimonials[1:] %}
+    <div class="testimonial-card">
+      <div class="testimonial-quote-mark">"</div>
+      <div class="star-rating">
+        {% for i in range(t.rating) %}<i class="fas fa-star"></i>{% endfor %}
+        {% for i in range(5 - t.rating) %}<i class="far fa-star" style="color:var(--bdr)"></i>{% endfor %}
+      </div>
+      <p class="testimonial-text">"{{ t.quote }}"</p>
+      <div class="testimonial-author">
+        {% if t.avatar %}
+          <img src="{{ url_for('static', filename=t.avatar) }}" alt="{{ t.customer_name }}" class="testimonial-avatar">
+        {% else %}
+          <div class="testimonial-avatar-placeholder">{{ t.customer_name[0] }}</div>
+        {% endif %}
+        <div>
+          <div class="testimonial-name">{{ t.customer_name }}</div>
+          <div class="testimonial-role">{{ t.job_title }}{% if t.company %}, {{ t.company }}{% endif %}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 {% endif %}
+
+{% else %}
+<div style="max-width:1280px; margin:0 auto; padding:100px 40px; text-align:center; color:var(--muted);">
+  <i class="fas fa-star" style="font-size:3rem; opacity:0.2; display:block; margin-bottom:16px;"></i>
+  <p>No testimonials yet.</p>
+</div>
+{% endif %}
+
+<!-- CTA -->
+<section style="border-top:1px solid var(--bdr); padding:80px 40px; text-align:center;">
+  <h2 style="font-family:var(--font-display); font-size:clamp(1.8rem,4vw,3rem); font-weight:800; letter-spacing:-0.04em; margin-bottom:16px;">
+    Ready to write your own success story?
+  </h2>
+  <a href="{{ url_for('contact') }}" class="btn btn-primary" style="margin-top:8px;">
+    <span>Get in Touch</span>
+    <i class="fas fa-arrow-up-right"></i>
+  </a>
+</section>
+
 {% endblock %}

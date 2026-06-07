@@ -1,79 +1,69 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Manage Events{% endblock %}
+{% block breadcrumb %}<span class="bc-sep">/</span><span>Events</span>{% endblock %}
 
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as Dashboard) -->
-    <aside class="w-64 glass h-screen sticky top-20 p-6 flex flex-col gap-2 overflow-y-auto">
-        <div class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4 px-2">Main Menu</div>
-        <a href="{{ url_for('admin_dashboard') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
-            <span>📊</span> Dashboard
-        </a>
-        <a href="{{ url_for('manage_events') }}" class="flex items-center gap-3 p-3 rounded-xl bg-white text-black font-semibold">
-            <span>📅</span> Events
-        </a>
-        <a href="{{ url_for('manage_articles') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
-            <span>✍️</span> Articles
-        </a>
-        <a href="{{ url_for('manage_testimonials') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
-            <span>⭐</span> Testimonials
-        </a>
-        <a href="{{ url_for('manage_solutions') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
-            <span>💡</span> Solutions
-        </a>
-        <a href="{{ url_for('manage_team') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all">
-            <span>👥</span> Team
-        </a>
-        <a href="{{ url_for('settings') }}" class="flex items-center gap-3 p-3 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-all mt-auto">
-            <span>⚙️</span> Site Settings
-        </a>
-    </aside>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Events</h1>
+        <p class="page-subtitle">{{ events|length }} event{{ 's' if events|length != 1 }}</p>
+    </div>
+    <a href="{{ url_for('add_event') }}" class="btn-primary"><i class="fas fa-plus"></i> Add New Event</a>
+</div>
 
-    <main class="flex-1 p-8">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-10">
-                <h1 class="text-3xl font-bold text-gradient">Manage Events</h1>
-                <a href="{{ url_for('add_event') }}" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-neutral-200 transition-all">
-                    + Add New Event
-                </a>
-            </div>
-
-            <div class="glass rounded-3xl overflow-hidden">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-white/5 text-neutral-400 uppercase text-xs">
-                        <tr>
-                            <th class="px-6 py-4">Event</th>
-                            <th class="px-6 py-4">Date</th>
-                            <th class="px-6 py-4">Status</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        {% for event in events %}
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    {% if event.image %}
-                                    <img src="{{ url_for('static', filename=event.image) }}" class="w-10 h-10 rounded-lg object-cover">
-                                    {% endif %}
-                                    <span class="font-medium">{{ event.name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-neutral-400">{{ event.event_date.strftime('%Y-%m-%d') }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase {% if event.is_upcoming %}bg-green-500/20 text-green-400{% else %}bg-neutral-500/20 text-neutral-400{% endif %}">
-                                    {{ 'Upcoming' if event.is_upcoming else 'Past' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right space-x-3">
-                                <a href="{{ url_for('edit_event', id=event.id) }}" class="text-blue-400 hover:underline">Edit</a>
-                                <a href="{{ url_for('delete_event', id=event.id) }}" class="text-red-400 hover:underline" onclick="return confirm('Are you sure?')">Delete</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+<div class="admin-card">
+    {% if events %}
+    <div class="table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Event Name</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>
+                        {% if event.image %}
+                            <img src="{{ url_for('static', filename=event.image) }}" alt="" class="table-thumb">
+                        {% else %}
+                            <div class="table-thumb-placeholder"><i class="fas fa-calendar-alt"></i></div>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ event.name }}</strong></td>
+                    <td>{{ event.event_date.strftime('%d %b %Y') if event.event_date else '—' }}</td>
+                    <td>{{ event.location or '—' }}</td>
+                    <td>
+                        {% if event.is_upcoming %}
+                            <span class="status-badge status-published">Upcoming</span>
+                        {% else %}
+                            <span class="status-badge status-draft">Past</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('edit_event', id=event.id) }}" class="btn-action btn-edit" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                        <form method="POST" action="{{ url_for('delete_event', id=event.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn-action btn-delete" title="Delete" onclick="confirmDelete(this.closest('form'))"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-alt"></i>
+        <h3>No events yet</h3>
+        <p>Add your first event to get started.</p>
+        <a href="{{ url_for('add_event') }}" class="btn-primary">Add Event</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

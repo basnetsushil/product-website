@@ -1,34 +1,78 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Manage Testimonials{% endblock %}
+{% block breadcrumb %}<span class="bc-sep">/</span><span>Testimonials</span>{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-10">
-                <h1 class="text-3xl font-bold text-gradient">Manage Testimonials</h1>
-                <a href="{{ url_for('add_testimonial') }}" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-neutral-200 transition-all">+ Add Testimonial</a>
-            </div>
-            <div class="glass rounded-3xl overflow-hidden">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-white/5 text-neutral-400 uppercase text-xs">
-                        <tr><th class="px-6 py-4">Customer</th><th class="px-6 py-4">Company</th><th class="px-6 py-4">Rating</th><th class="px-6 py-4 text-right">Actions</th></tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        {% for t in testimonials %}
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-6 py-4 font-medium">{{ t.customer_name }}</td>
-                            <td class="px-6 py-4 text-neutral-400">{{ t.company }}</td>
-                            <td class="px-6 py-4 text-yellow-500">{{ t.rating }} ★</td>
-                            <td class="px-6 py-4 text-right space-x-3">
-                                <a href="{{ url_for('edit_testimonial', id=t.id) }}" class="text-blue-400 hover:underline">Edit</a>
-                                <a href="{{ url_for('delete_testimonial', id=t.id) }}" class="text-red-400 hover:underline" onclick="return confirm('Delete testimonial?')">Delete</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Testimonials</h1>
+        <p class="page-subtitle">{{ testimonials|length }} testimonial{{ 's' if testimonials|length != 1 }}</p>
+    </div>
+    <a href="{{ url_for('add_testimonial') }}" class="btn-primary"><i class="fas fa-plus"></i> Add New Testimonial</a>
+</div>
+
+<div class="admin-card">
+    {% if testimonials %}
+    <div class="table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Avatar</th>
+                    <th>Customer</th>
+                    <th>Company</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in testimonials %}
+                <tr>
+                    <td>
+                        {% if t.avatar %}
+                            <img src="{{ url_for('static', filename=t.avatar) }}" alt="" class="table-thumb table-thumb--round">
+                        {% else %}
+                            <div class="table-thumb-placeholder table-thumb--round"><i class="fas fa-user"></i></div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ t.customer_name }}</strong><br>
+                        <small class="text-muted">{{ t.job_title or '' }}</small>
+                    </td>
+                    <td>{{ t.company or '—' }}</td>
+                    <td>
+                        <div class="star-rating">
+                            {% for i in range(5) %}
+                                <i class="fas fa-star {% if i < t.rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if t.is_published %}
+                            <span class="status-badge status-published">Published</span>
+                        {% else %}
+                            <span class="status-badge status-draft">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('edit_testimonial', id=t.id) }}" class="btn-action btn-edit"><i class="fas fa-pencil-alt"></i></a>
+                        <form method="POST" action="{{ url_for('delete_testimonial', id=t.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn-action btn-delete" onclick="confirmDelete(this.closest('form'))"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-star"></i>
+        <h3>No testimonials yet</h3>
+        <p>Add your first customer testimonial.</p>
+        <a href="{{ url_for('add_testimonial') }}" class="btn-primary">Add Testimonial</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

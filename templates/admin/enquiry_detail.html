@@ -1,41 +1,87 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Enquiry #{{ enquiry.id }}{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_enquiries') }}">Enquiries</a>
+<span class="bc-sep">/</span><span>#{{ enquiry.id }}</span>
+{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex justify-between items-center mb-10">
-                <h1 class="text-3xl font-bold text-gradient">Enquiry Details</h1>
-                <a href="{{ url_for('admin_dashboard') }}" class="glass px-6 py-2 rounded-full text-sm">Back to Dashboard</a>
-            </div>
-            <div class="glass p-10 rounded-3xl space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-white/10 pb-8">
-                    <div>
-                        <label class="text-xs text-neutral-500 uppercase font-bold">Full Name</label>
-                        <p class="text-lg text-white">{{ enquiry.name }}</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-neutral-500 uppercase font-bold">Email Address</label>
-                        <p class="text-lg text-white">{{ enquiry.email }}</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-neutral-500 uppercase font-bold">Company</label>
-                        <p class="text-lg text-white">{{ enquiry.company or 'Not Provided' }}</p>
-                    </div>
-                    <div>
-                        <label class="text-xs text-neutral-500 uppercase font-bold">Country</label>
-                        <p class="text-lg text-white">{{ enquiry.country or 'Not Provided' }}</p>
-                    </div>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Enquiry #{{ enquiry.id }}</h1>
+        <p class="page-subtitle">Received {{ enquiry.submitted_at.strftime('%d %B %Y at %H:%M') }}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{{ url_for('admin_enquiries') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        <form method="POST" action="{{ url_for('delete_enquiry', id=enquiry.id) }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="btn-danger" onclick="confirmDelete(this.closest('form'))"><i class="fas fa-trash"></i> Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="admin-card detail-main">
+        <div class="detail-section">
+            <h3 class="detail-section-title"><i class="fas fa-user"></i> Contact Information</h3>
+            <div class="detail-fields">
+                <div class="detail-field">
+                    <span class="detail-label">Full Name</span>
+                    <span class="detail-value">{{ enquiry.name }}</span>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-neutral-500 uppercase font-bold">Job Requirements / Details</label>
-                    <p class="text-neutral-300 leading-relaxed p-4 bg-black/30 rounded-xl border border-white/5">{{ enquiry.job_details }}</p>
+                <div class="detail-field">
+                    <span class="detail-label">Email Address</span>
+                    <span class="detail-value"><a href="mailto:{{ enquiry.email }}">{{ enquiry.email }}</a></span>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs text-neutral-600">Submitted on: {{ enquiry.submitted_at.strftime('%d %B %Y, %H:%M') }}</p>
+                <div class="detail-field">
+                    <span class="detail-label">Phone</span>
+                    <span class="detail-value">{{ enquiry.phone or '—' }}</span>
+                </div>
+                <div class="detail-field">
+                    <span class="detail-label">Company</span>
+                    <span class="detail-value">{{ enquiry.company or '—' }}</span>
+                </div>
+                <div class="detail-field">
+                    <span class="detail-label">Job Title</span>
+                    <span class="detail-value">{{ enquiry.job_title or '—' }}</span>
+                </div>
+                <div class="detail-field">
+                    <span class="detail-label">Country</span>
+                    <span class="detail-value">{{ enquiry.country or '—' }}</span>
                 </div>
             </div>
         </div>
-    </main>
+
+        <div class="detail-section">
+            <h3 class="detail-section-title"><i class="fas fa-comment-alt"></i> Project Details</h3>
+            <div class="detail-body-text">{{ enquiry.job_details or 'No details provided.' }}</div>
+        </div>
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="admin-card">
+            <h3 class="card-title"><i class="fas fa-info-circle"></i> Quick Info</h3>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="info-label">Submitted</span>
+                    <span class="info-val">{{ enquiry.submitted_at.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Time</span>
+                    <span class="info-val">{{ enquiry.submitted_at.strftime('%H:%M UTC') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ID</span>
+                    <span class="info-val">#{{ enquiry.id }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="admin-card">
+            <h3 class="card-title"><i class="fas fa-reply"></i> Reply</h3>
+            <a href="mailto:{{ enquiry.email }}?subject=Re: Your enquiry to AI-Solutions" class="btn-primary btn-full">
+                <i class="fas fa-envelope"></i> Send Email
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,55 +1,197 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Settings{% endblock %}
+{% block breadcrumb %}<span class="bc-sep">/</span><span>Settings</span>{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold text-gradient mb-10">Site Settings</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
-                {{ form.hidden_tag() }}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Company Name</label>
-                        {{ form.company_name(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Company Logo</label>
-                        {{ form.company_logo(class="text-sm text-neutral-400") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Tagline</label>
-                    {{ form.tagline(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Contact Email</label>
-                        {{ form.email(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Phone Number</label>
-                        {{ form.phone(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Business Address</label>
-                    {{ form.address(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">LinkedIn URL</label>
-                        {{ form.linkedin_url(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">GitHub URL</label>
-                        {{ form.github_url(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Update Settings</button>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage site configuration and your admin profile</p>
 </div>
+
+<!-- SITE SETTINGS -->
+<div class="settings-section-title">
+    <i class="fas fa-globe"></i> Site Settings
+</div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ site_form.hidden_tag() }}
+        <input type="hidden" name="save_site" value="1">
+
+        <div class="form-section-title">Company Logo</div>
+        <div class="logo-upload-wrap">
+            <div class="logo-preview-box">
+                {% if site and site.company_logo %}
+                    <img src="{{ url_for('static', filename=site.company_logo) }}" alt="Current Logo" id="logoPreview" class="logo-preview-img">
+                {% else %}
+                    <div class="logo-placeholder" id="logoPlaceholder">
+                        <i class="fas fa-image"></i>
+                        <span>No logo</span>
+                    </div>
+                    <img id="logoPreview" class="logo-preview-img" style="display:none" alt="Preview">
+                {% endif %}
+            </div>
+            <div class="logo-upload-actions">
+                <div class="upload-zone upload-zone--compact" id="logoZone" onclick="document.getElementById('logoInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Upload new logo</span>
+                    <small>PNG, SVG, max 5MB</small>
+                </div>
+                {{ site_form.company_logo(id="logoInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            </div>
+        </div>
+
+        <div class="form-section-title">Company Information</div>
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ site_form.company_name.label(class="form-label") }}
+                {{ site_form.company_name(class="form-input") }}
+                {% for e in site_form.company_name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ site_form.tagline.label(class="form-label") }}
+                {{ site_form.tagline(class="form-input") }}
+                {% for e in site_form.tagline.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-3">
+            <div class="form-group">
+                {{ site_form.email.label(class="form-label") }}
+                {{ site_form.email(class="form-input") }}
+                {% for e in site_form.email.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ site_form.phone.label(class="form-label") }}
+                {{ site_form.phone(class="form-input") }}
+                {% for e in site_form.phone.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ site_form.address.label(class="form-label") }}
+                {{ site_form.address(class="form-input") }}
+                {% for e in site_form.address.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-section-title">Social Media Links</div>
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                <label class="form-label"><i class="fab fa-linkedin" style="color:#0077b5"></i> {{ site_form.linkedin_url.label.text }}</label>
+                {{ site_form.linkedin_url(class="form-input", placeholder="https://linkedin.com/company/...") }}
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fab fa-twitter" style="color:#1da1f2"></i> {{ site_form.twitter_url.label.text }}</label>
+                {{ site_form.twitter_url(class="form-input", placeholder="https://twitter.com/...") }}
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fab fa-facebook" style="color:#1877f2"></i> {{ site_form.facebook_url.label.text }}</label>
+                {{ site_form.facebook_url(class="form-input", placeholder="https://facebook.com/...") }}
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fab fa-instagram" style="color:#e4405f"></i> {{ site_form.instagram_url.label.text }}</label>
+                {{ site_form.instagram_url(class="form-input", placeholder="https://instagram.com/...") }}
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fab fa-github"></i> {{ site_form.github_url.label.text }}</label>
+                {{ site_form.github_url(class="form-input", placeholder="https://github.com/...") }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            {{ site_form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+
+<!-- ADMIN PROFILE -->
+<div class="settings-section-title" style="margin-top:2.5rem">
+    <i class="fas fa-user-circle"></i> Admin Profile
+</div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ profile_form.hidden_tag() }}
+        <input type="hidden" name="save_profile" value="1">
+
+        <div class="form-section-title">Profile Picture</div>
+        <div class="logo-upload-wrap">
+            <div class="logo-preview-box">
+                {% if current_user.profile_picture %}
+                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="Profile" id="profilePreview" class="logo-preview-img logo-preview-img--round">
+                {% else %}
+                    <div class="admin-initials-circle" id="profilePlaceholder">
+                        {{ current_user.username[0].upper() }}
+                    </div>
+                    <img id="profilePreview" class="logo-preview-img logo-preview-img--round" style="display:none" alt="Preview">
+                {% endif %}
+            </div>
+            <div class="logo-upload-actions">
+                <div class="upload-zone upload-zone--compact" onclick="document.getElementById('profileInput').click()">
+                    <i class="fas fa-camera"></i>
+                    <span>Upload new photo</span>
+                    <small>JPG, PNG, max 5MB</small>
+                </div>
+                {{ profile_form.profile_picture(id="profileInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            </div>
+        </div>
+
+        <div class="form-section-title">Change Password</div>
+        <div class="form-grid form-grid-3">
+            <div class="form-group">
+                {{ profile_form.current_password.label(class="form-label") }}
+                {{ profile_form.current_password(class="form-input") }}
+                {% for e in profile_form.current_password.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ profile_form.new_password.label(class="form-label") }}
+                {{ profile_form.new_password(class="form-input") }}
+                {% for e in profile_form.new_password.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ profile_form.confirm_password.label(class="form-label") }}
+                {{ profile_form.confirm_password(class="form-input") }}
+                {% for e in profile_form.confirm_password.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+        <p class="field-hint">Leave new password fields blank to keep your current password. Current password is always required to save.</p>
+
+        <div class="form-actions">
+            {{ profile_form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Logo preview
+document.getElementById('logoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const preview = document.getElementById('logoPreview');
+        const placeholder = document.getElementById('logoPlaceholder');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+
+// Profile pic preview
+document.getElementById('profileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const preview = document.getElementById('profilePreview');
+        const placeholder = document.getElementById('profilePlaceholder');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+</script>
 {% endblock %}

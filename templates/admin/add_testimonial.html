@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
+<div class="flex min-h-screen bg-black">
+    {% include 'admin/_sidebar.html' %}
     <main class="flex-1 p-8">
         <div class="max-w-3xl mx-auto">
             <h1 class="text-3xl font-bold text-gradient mb-10">Add Testimonial</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6 border border-white/10 backdrop-blur-xl">
                 {{ form.hidden_tag() }}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-2">
@@ -37,7 +37,7 @@
                 </div>
                 <div class="flex gap-4 pt-6">
                     <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Testimonial</button>
-                    <a href="{{ url_for('manage_testimonials') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
+                    <a href="{{ url_for('manage_testimonials') }}" class="glass px-8 py-3 rounded-full font-bold text-center border border-white/10">Cancel</a>
                 </div>
             </form>
         </div>

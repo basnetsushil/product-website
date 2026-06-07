@@ -1,63 +1,82 @@
 {% extends "base.html" %}
-
-{% block title %}Articles - Product Website{% endblock %}
+{% block title %}Articles{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="container">
-        <h1>Articles & Blog</h1>
-        <p>Insights, tips, and industry trends</p>
-    </div>
+
+<div class="page-hero">
+  <div class="page-label">Knowledge Hub</div>
+  <h1>AI Insights &<br><span style="color:var(--acc)">Articles</span></h1>
+  <p>Practical thinking on AI strategy, technology, and implementation from our team of practitioners.</p>
 </div>
 
-<section class="section">
-    <div class="container">
-        <div class="articles-list">
-            {% for article in articles.items %}
-            <div class="article-list-item">
-                <div class="article-list-content">
-                    <h2><a href="{{ url_for('article_detail', slug=article.slug) }}">{{ article.title }}</a></h2>
-                    <p class="article-meta">
-                        By {{ article.author }} | {{ article.created_at.strftime('%B %d, %Y') }}
-                    </p>
-                    <p class="article-excerpt">{{ article.excerpt or article.content[:200] }}...</p>
-                    <a href="{{ url_for('article_detail', slug=article.slug) }}" class="btn btn-small">Read Full Article</a>
-                </div>
-                {% if article.featured_image %}
-                    <img src="{{ url_for('static', filename='uploads/articles/' + article.featured_image) }}" alt="{{ article.title }}" class="article-list-image">
-                {% endif %}
-            </div>
-            {% endfor %}
+{% if articles %}
+<!-- Featured article -->
+{% set feat = articles[0] %}
+<div style="border-bottom:1px solid var(--bdr);">
+  <div style="max-width:1280px; margin:0 auto;">
+    <a href="{{ url_for('article_detail', id=feat.id) }}" style="display:grid; grid-template-columns:1fr 1fr; text-decoration:none; min-height:400px;">
+      <div style="padding:60px 40px; display:flex; flex-direction:column; justify-content:flex-end; border-right:1px solid var(--bdr);">
+        <div style="margin-top:auto;">
+          {% if feat.category %}<div class="article-category" style="margin-bottom:14px;">{{ feat.category }}</div>{% endif %}
+          <h2 style="font-family:var(--font-display); font-size:clamp(1.8rem,3.5vw,2.8rem); font-weight:800; letter-spacing:-0.04em; line-height:1.1; color:var(--fg); margin-bottom:16px;">{{ feat.title }}</h2>
+          {% if feat.excerpt %}<p style="font-size:0.95rem; color:var(--muted); line-height:1.7; margin-bottom:24px;">{{ feat.excerpt }}</p>{% endif %}
+          <div style="display:flex; align-items:center; gap:16px; font-size:0.72rem; color:var(--muted); letter-spacing:0.05em;">
+            <span>{{ feat.author }}</span>
+            <span style="color:var(--bdr)">|</span>
+            <span>{{ feat.published_at.strftime('%d %b %Y') }}</span>
+          </div>
         </div>
-
-        <!-- Pagination -->
-        {% if articles.pages > 1 %}
-        <div class="pagination">
-            {% if articles.has_prev %}
-                <a href="{{ url_for('articles', page=articles.prev_num) }}" class="btn btn-small">Previous</a>
-            {% endif %}
-
-            {% for page_num in articles.iter_pages() %}
-                {% if page_num %}
-                    {% if page_num == articles.page %}
-                        <span class="pagination-current">{{ page_num }}</span>
-                    {% else %}
-                        <a href="{{ url_for('articles', page=page_num) }}" class="btn btn-small">{{ page_num }}</a>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-
-            {% if articles.has_next %}
-                <a href="{{ url_for('articles', page=articles.next_num) }}" class="btn btn-small">Next</a>
-            {% endif %}
-        </div>
+      </div>
+      <div style="overflow:hidden; position:relative; min-height:400px;">
+        {% if feat.cover_image %}
+          <img src="{{ url_for('static', filename=feat.cover_image) }}" alt="{{ feat.title }}"
+               style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; filter:grayscale(20%);">
+        {% else %}
+          <div style="width:100%; height:100%; background:var(--sur); display:flex; align-items:center; justify-content:center; position:absolute; inset:0;">
+            <i class="fas fa-newspaper" style="font-size:6rem; color:var(--fg); opacity:0.05;"></i>
+          </div>
         {% endif %}
-    </div>
-</section>
+        <div style="position:absolute; top:0; left:0; background:var(--acc); color:var(--bg); font-size:0.65rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; padding:6px 14px;">
+          Latest
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
 
-{% if not articles.items %}
-<div class="container">
-    <p class="text-center">No articles available at the moment.</p>
+<!-- Article grid -->
+{% if articles|length > 1 %}
+<div style="max-width:1280px; margin:0 auto; padding:60px 40px;">
+  <div class="grid-3">
+    {% for article in articles[1:] %}
+    <a href="{{ url_for('article_detail', id=article.id) }}" class="article-card">
+      <div class="article-card-img-wrap">
+        {% if article.cover_image %}
+          <img src="{{ url_for('static', filename=article.cover_image) }}" alt="{{ article.title }}" class="article-card-img">
+        {% else %}
+          <div class="article-card-img-placeholder"><i class="fas fa-newspaper"></i></div>
+        {% endif %}
+      </div>
+      <div class="article-card-body">
+        {% if article.category %}<div class="article-category">{{ article.category }}</div>{% endif %}
+        <h3 class="article-title">{{ article.title }}</h3>
+        {% if article.excerpt %}<p class="article-excerpt">{{ article.excerpt[:120] }}{% if article.excerpt|length > 120 %}...{% endif %}</p>{% endif %}
+        <div class="article-meta">
+          <span>{{ article.author }}</span>
+          <span>{{ article.published_at.strftime('%d %b %Y') }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
 </div>
 {% endif %}
+
+{% else %}
+<div style="max-width:1280px; margin:0 auto; padding:100px 40px; text-align:center; color:var(--muted);">
+  <i class="fas fa-newspaper" style="font-size:3rem; opacity:0.2; display:block; margin-bottom:16px;"></i>
+  <p>No articles published yet.</p>
+</div>
+{% endif %}
+
 {% endblock %}

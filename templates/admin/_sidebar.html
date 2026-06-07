@@ -1,0 +1,85 @@
+<nav class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            {% if settings and settings.company_logo %}
+                <img src="{{ url_for('static', filename=settings.company_logo) }}" alt="Logo" class="sidebar-logo-img">
+            {% else %}
+                <div class="sidebar-logo-icon"><i class="fas fa-brain"></i></div>
+            {% endif %}
+        </div>
+        <div class="sidebar-brand">
+            <span class="brand-name">{{ settings.company_name if settings else 'AI-Solutions' }}</span>
+            <span class="brand-tag">Admin Panel</span>
+        </div>
+        <button class="sidebar-toggle-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-section">
+            <span class="nav-section-label">Overview</span>
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-label">Content</span>
+            <a href="{{ url_for('admin_events') }}" class="nav-item {% if 'event' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i><span>Events</span>
+            </a>
+            <a href="{{ url_for('admin_articles') }}" class="nav-item {% if 'article' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-newspaper"></i><span>Articles</span>
+            </a>
+            <a href="{{ url_for('admin_testimonials') }}" class="nav-item {% if 'testimonial' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-star"></i><span>Testimonials</span>
+            </a>
+            <a href="{{ url_for('admin_solutions') }}" class="nav-item {% if 'solution' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-robot"></i><span>Solutions</span>
+            </a>
+            <a href="{{ url_for('admin_team') }}" class="nav-item {% if 'team' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-users"></i><span>Team</span>
+            </a>
+            <a href="{{ url_for('case_studies') }}" class="nav-item {% if 'case_stud' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-briefcase"></i><span>Case Studies</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-label">Enquiries</span>
+            <a href="{{ url_for('admin_enquiries') }}" class="nav-item {% if 'enquir' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-envelope"></i><span>All Enquiries</span>
+                {% set eq_count = enquiry_count if enquiry_count is defined else 0 %}
+            </a>
+            <a href="{{ url_for('export_enquiries') }}" class="nav-item">
+                <i class="fas fa-download"></i><span>Export CSV</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-label">Settings</span>
+            <a href="{{ url_for('admin_settings') }}" class="nav-item {% if request.endpoint == 'admin_settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i><span>Site Settings</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <a href="{{ url_for('admin_logout') }}" class="nav-item nav-logout">
+                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="admin-avatar-wrap">
+            {% if current_user.profile_picture %}
+                <img src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="Admin" class="admin-avatar-img">
+            {% else %}
+                <div class="admin-avatar-initials">{{ current_user.username[0].upper() }}</div>
+            {% endif %}
+        </div>
+        <div class="admin-user-info">
+            <span class="admin-username">{{ current_user.username }}</span>
+            <span class="admin-badge">Admin</span>
+        </div>
+    </div>
+</nav>

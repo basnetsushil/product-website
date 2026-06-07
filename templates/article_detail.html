@@ -1,55 +1,72 @@
 {% extends "base.html" %}
-
-{% block title %}{{ article.title }} - Product Website{% endblock %}
+{% block title %}{{ article.title }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="container">
-        <h1>{{ article.title }}</h1>
-        <p class="article-meta">
-            By {{ article.author }} | {{ article.created_at.strftime('%B %d, %Y') }}
-        </p>
-    </div>
+
+<div class="article-detail-hero">
+  <div style="margin-bottom:12px;">
+    <a href="{{ url_for('articles') }}" class="arrow-link" style="font-size:0.72rem;">
+      <i class="fas fa-arrow-left"></i> Back to Articles
+    </a>
+  </div>
+  {% if article.category %}<div class="article-category" style="margin-bottom:16px; font-size:0.72rem;">{{ article.category }}</div>{% endif %}
+  <h1 style="font-family:var(--font-display); font-size:clamp(2rem,5vw,3.8rem); font-weight:800; letter-spacing:-0.04em; line-height:1; color:var(--fg); max-width:900px; margin-bottom:20px;">
+    {{ article.title }}
+  </h1>
+  <div style="display:flex; align-items:center; gap:20px; font-size:0.75rem; color:var(--muted); letter-spacing:0.05em; border-top:1px solid var(--bdr); border-bottom:1px solid var(--bdr); padding:14px 0; margin-top:24px;">
+    <span><i class="fas fa-user" style="color:var(--acc); margin-right:6px;"></i>{{ article.author }}</span>
+    <span><i class="fas fa-calendar" style="color:var(--acc); margin-right:6px;"></i>{{ article.published_at.strftime('%d %B %Y') }}</span>
+    {% if article.category %}<span><i class="fas fa-tag" style="color:var(--acc); margin-right:6px;"></i>{{ article.category }}</span>{% endif %}
+  </div>
 </div>
 
-<section class="section">
-    <div class="container">
-        <div class="article-detail">
-            {% if article.featured_image %}
-                <img src="{{ url_for('static', filename='uploads/articles/' + article.featured_image) }}" alt="{{ article.title }}" class="article-detail-image">
-            {% endif %}
-            
-            <div class="article-detail-content">
-                {{ article.content }}
-            </div>
-        </div>
+{% if article.cover_image %}
+<div style="max-width:1280px; margin:0 auto; padding:40px 40px 0;">
+  <img src="{{ url_for('static', filename=article.cover_image) }}" alt="{{ article.title }}" class="article-cover">
+</div>
+{% endif %}
 
-        <!-- Related Articles -->
-        {% if related_articles %}
-        <div class="related-articles">
-            <h3>Related Articles</h3>
-            <div class="grid grid-3">
-                {% for related_article in related_articles %}
-                <div class="article-card">
-                    {% if related_article.featured_image %}
-                        <img src="{{ url_for('static', filename='uploads/articles/' + related_article.featured_image) }}" alt="{{ related_article.title }}" class="article-image">
-                    {% else %}
-                        <div class="article-image-placeholder">No Image</div>
-                    {% endif %}
-                    <div class="article-card-content">
-                        <h3>{{ related_article.title }}</h3>
-                        <p class="article-meta">{{ related_article.created_at.strftime('%B %d, %Y') }}</p>
-                        <a href="{{ url_for('article_detail', slug=related_article.slug) }}" class="btn btn-small">Read More</a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+<div class="article-body-wrap">
+  {% if article.excerpt %}
+  <p style="font-size:1.15rem; color:var(--fg); font-weight:500; line-height:1.7; margin-bottom:32px; padding-bottom:32px; border-bottom:1px solid var(--bdr);">
+    {{ article.excerpt }}
+  </p>
+  {% endif %}
+
+  <div class="article-body">
+    {{ article.body | replace('\n\n', '</p><p>') | replace('\n', '<br>') | safe | replace('**', '<strong>') }}
+  </div>
+</div>
+
+<!-- Related articles -->
+{% if related %}
+<div style="border-top:1px solid var(--bdr); padding:60px 40px; max-width:1280px; margin:0 auto;">
+  <div style="font-size:0.72rem; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--acc); display:flex; align-items:center; gap:10px; margin-bottom:32px;">
+    <span style="display:block; width:28px; height:1px; background:var(--acc);"></span>
+    More Articles
+  </div>
+  <div class="grid-3">
+    {% for art in related %}
+    <a href="{{ url_for('article_detail', id=art.id) }}" class="article-card">
+      <div class="article-card-img-wrap">
+        {% if art.cover_image %}
+          <img src="{{ url_for('static', filename=art.cover_image) }}" alt="{{ art.title }}" class="article-card-img">
+        {% else %}
+          <div class="article-card-img-placeholder"><i class="fas fa-newspaper"></i></div>
         {% endif %}
-
-        <div class="back-link">
-            <a href="{{ url_for('articles') }}">&larr; Back to Articles</a>
+      </div>
+      <div class="article-card-body">
+        {% if art.category %}<div class="article-category">{{ art.category }}</div>{% endif %}
+        <h3 class="article-title">{{ art.title }}</h3>
+        <div class="article-meta">
+          <span>{{ art.author }}</span>
+          <span>{{ art.published_at.strftime('%d %b %Y') }}</span>
         </div>
-    </div>
-</section>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}

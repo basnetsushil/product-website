@@ -1,50 +1,86 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Edit Article{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_articles') }}">Articles</a>
+<span class="bc-sep">/</span><span>Edit</span>
+{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Omitted here for brevity, use same as manage_articles) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold text-gradient mb-10">Edit Article</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
-                {{ form.hidden_tag() }}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Title</label>
-                        {{ form.title(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Category</label>
-                        {{ form.category(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Excerpt</label>
-                    {{ form.excerpt(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Body Content</label>
-                    {{ form.body(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-48") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Author</label>
-                        {{ form.author(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Cover Image</label>
-                        {{ form.cover_image(class="text-sm text-neutral-400") }}
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
-                    {{ form.is_published(class="w-4 h-4") }}
-                    <label class="text-sm font-medium text-neutral-300">Publish Immediately</label>
-                </div>
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Article</button>
-                    <a href="{{ url_for('manage_articles') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="page-header">
+    <h1 class="page-title">Edit Article</h1>
+    <a href="{{ url_for('admin_articles') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-input") }}
+            {% for e in form.title.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.category.label(class="form-label") }}
+                {{ form.category(class="form-input") }}
+                {% for e in form.category.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.author.label(class="form-label") }}
+                {{ form.author(class="form-input") }}
+                {% for e in form.author.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.excerpt.label(class="form-label") }}
+            {{ form.excerpt(class="form-input form-textarea", rows=3) }}
+            {% for e in form.excerpt.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.body.label(class="form-label") }}
+            {{ form.body(class="form-input form-textarea form-textarea--large", rows=14) }}
+            {% for e in form.body.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Cover Image <span class="label-hint">(leave blank to keep current)</span></label>
+            {% if article.cover_image %}
+            <div class="current-image-wrap">
+                <img src="{{ url_for('static', filename=article.cover_image) }}" alt="Current" class="current-image">
+                <span class="current-image-label">Current cover image</span>
+            </div>
+            {% endif %}
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>{{ 'Change cover image' if article.cover_image else 'Click to upload' }}</p>
+                    <span>JPG, PNG, GIF, WEBP — max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview" style="display:none" alt="Preview">
+            </div>
+            {{ form.cover_image(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.cover_image.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_published(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Published
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_articles') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');
+</script>
 {% endblock %}

@@ -1,309 +1,386 @@
 import os
-import uuid
 import csv
-from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, flash, request, send_file
-from flask_sqlalchemy import SQLAlchemy
+import uuid
+from io import StringIO
+from datetime import datetime, timedelta
+from functools import wraps
+
+from flask import (Flask, render_template, redirect, url_for, flash, request,
+                   send_file, make_response, g)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail, Message
+from sqlalchemy import desc, func
 from werkzeug.utils import secure_filename
-from PIL import Image
+from PIL import Image as PILImage
 
 from models import db, AdminUser, Enquiry, Article, Event, Testimonial, Solution, TeamMember, SiteSettings
-from forms import (ContactForm, AdminLoginForm, EventForm, ArticleForm, 
-                   TestimonialForm, SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm)
+from forms import (ContactForm, AdminLoginForm, EventForm, ArticleForm, TestimonialForm,
+                   SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm)
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-12345')
+
+# Config
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-prod-2024')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ai_solutions.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB Limit
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'localhost')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 25))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'false').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'info@ai-solutions.uk')
 
-# Mail Configuration
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USER', 'your-email@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASS', 'your-app-password')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-# Initialize Extensions
 db.init_app(app)
-csrf = CSRFProtect(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'admin_login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'error'
+
+# Create upload folders
+for folder in ['events', 'articles', 'testimonials', 'solutions', 'team', 'logo', 'admin']:
+    os.makedirs(os.path.join('static/uploads', folder), exist_ok=True)
+
 
 @login_manager.user_loader
 def load_user(user_id):
-    return AdminUser.query.get(int(user_id))
+    return db.session.get(AdminUser, int(user_id))
 
-# ==========================================
-# CONTEXT PROCESSORS (Fixes 'datetime is undefined' error)
-# ==========================================
-@app.context_processor
-def inject_now():
-    return {'datetime': datetime}
 
-# ==========================================
-# IMAGE UPLOAD SYSTEM (Pillow Implementation)
-# ==========================================
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def save_image(file, subfolder, max_width=1200):
-    if not file or not allowed_file(file.filename):
-        return None
-    
-    target_dir = os.path.join(app.config['UPLOAD_FOLDER'], subfolder)
-    os.makedirs(target_dir, exist_ok=True)
-    
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    filename = f"{uuid.uuid4().hex}.{ext}"
-    filepath = os.path.join(target_dir, filename)
-    
     try:
-        img = Image.open(file)
-        if img.width > max_width:
-            ratio = max_width / float(img.width)
-            new_height = int(float(img.height) * float(ratio))
-            img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
-        
-        img.save(filepath, optimize=True, quality=85)
+        if not file or not allowed_file(file.filename):
+            return None
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        save_dir = os.path.join(app.config['UPLOAD_FOLDER'], subfolder)
+        os.makedirs(save_dir, exist_ok=True)
+        filepath = os.path.join(save_dir, filename)
+        file.save(filepath)
+        try:
+            img = PILImage.open(filepath)
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_h = int(img.height * ratio)
+                img = img.resize((max_width, new_h), PILImage.LANCZOS)
+                img.save(filepath)
+        except Exception:
+            pass
         return f"uploads/{subfolder}/{filename}"
     except Exception as e:
-        print(f"Image processing error: {e}")
+        print(f"Image save error: {e}")
         return None
 
-# Initialize Folders and DB
-with app.app_context():
-    folders = ['events', 'articles', 'testimonials', 'solutions', 'team', 'logo']
-    for folder in folders:
-        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], folder), exist_ok=True)
-    db.create_all()
 
-# ==========================================
-# PUBLIC ROUTES
-# ==========================================
+def delete_image(path):
+    if path:
+        full = os.path.join('static', path)
+        if os.path.exists(full):
+            try:
+                os.remove(full)
+            except Exception:
+                pass
+
+
+@app.context_processor
+def inject_settings():
+    settings = db.session.get(SiteSettings, 1)
+    if not settings:
+        settings = SiteSettings(id=1, company_name='AI-Solutions')
+    return dict(settings=settings)
+
+
+# ── Public Routes ───────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
-    articles = Article.query.filter_by(is_published=True).order_by(Article.published_at.desc()).limit(3).all()
+    articles = Article.query.filter_by(is_published=True).order_by(desc(Article.published_at)).limit(3).all()
     testimonials = Testimonial.query.filter_by(is_published=True).limit(3).all()
     solutions = Solution.query.filter_by(is_published=True).order_by(Solution.order_index).limit(3).all()
-    settings = SiteSettings.query.first()
-    return render_template('index.html', articles=articles, testimonials=testimonials, solutions=solutions, settings=settings)
+    team = TeamMember.query.filter_by(is_published=True).order_by(TeamMember.order_index).limit(4).all()
+    return render_template('index.html', articles=articles, testimonials=testimonials,
+                           solutions=solutions, team=team)
+
 
 @app.route('/solutions')
 def solutions():
-    all_solutions = Solution.query.filter_by(is_published=True).order_by(Solution.order_index).all()
-    return render_template('solutions.html', solutions=all_solutions)
+    sols = Solution.query.filter_by(is_published=True).order_by(Solution.order_index).all()
+    return render_template('solutions.html', solutions=sols)
+
 
 @app.route('/case-studies')
 def case_studies():
-    cases = Article.query.filter_by(category='Case Study', is_published=True).all()
-    return render_template('case_studies.html', cases=cases)
+    return render_template('case_studies.html')
+
 
 @app.route('/testimonials')
 def testimonials():
-    all_testimonials = Testimonial.query.filter_by(is_published=True).all()
-    return render_template('testimonials.html', testimonials=all_testimonials)
+    testimonials = Testimonial.query.filter_by(is_published=True).all()
+    return render_template('testimonials.html', testimonials=testimonials)
+
 
 @app.route('/articles')
 def articles():
-    all_articles = Article.query.filter_by(is_published=True).order_by(Article.published_at.desc()).all()
-    return render_template('articles.html', articles=all_articles)
+    articles = Article.query.filter_by(is_published=True).order_by(desc(Article.published_at)).all()
+    return render_template('articles.html', articles=articles)
+
 
 @app.route('/articles/<int:id>')
 def article_detail(id):
-    article = Article.query.get_or_404(id)
-    related = Article.query.filter(Article.category == article.category, Article.id != id).limit(3).all()
+    article = db.get_or_404(Article, id)
+    related = Article.query.filter(Article.id != id, Article.is_published == True).limit(3).all()
     return render_template('article_detail.html', article=article, related=related)
+
 
 @app.route('/events')
 def events():
-    upcoming = Event.query.filter_by(is_upcoming=True).order_by(Event.event_date.asc()).all()
-    past = Event.query.filter_by(is_upcoming=False).order_by(Event.event_date.desc()).all()
+    upcoming = Event.query.filter_by(is_upcoming=True).order_by(Event.event_date).all()
+    past = Event.query.filter_by(is_upcoming=False).order_by(desc(Event.event_date)).all()
     return render_template('events.html', upcoming=upcoming, past=past)
+
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     form = ContactForm()
+    site = db.session.get(SiteSettings, 1)
     if form.validate_on_submit():
         enquiry = Enquiry(
             name=form.name.data, email=form.email.data, phone=form.phone.data,
-            company=form.company.data, country=form.country.data, 
+            company=form.company.data, country=form.country.data,
             job_title=form.job_title.data, job_details=form.job_details.data
         )
         db.session.add(enquiry)
         db.session.commit()
-        
         try:
-            msg = Message("New Website Enquiry", sender=app.config['MAIL_USERNAME'], recipients=[app.config['MAIL_USERNAME']])
-            msg.body = f"New enquiry from {form.name.data} ({form.email.data}):\n\n{form.job_details.data}"
+            msg = Message(
+                subject=f"New Enquiry from {form.name.data}",
+                recipients=['info@ai-solutions.uk'],
+                body=f"Name: {form.name.data}\nEmail: {form.email.data}\nCompany: {form.company.data}\n\n{form.job_details.data}"
+            )
             mail.send(msg)
-        except:
-            pass 
-            
-        flash('Your message has been sent successfully!', 'success')
+        except Exception as e:
+            print(f"Mail error: {e}")
+        flash('Thank you! Your enquiry has been received. We\'ll be in touch shortly.', 'success')
         return redirect(url_for('contact'))
-    return render_template('contact.html', form=form)
+    return render_template('contact.html', form=form, site=site)
 
-# ==========================================
-# ADMIN AUTH ROUTES
-# ==========================================
+
+# ── Admin Auth ─────────────────────────────────────────────────────────────────
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('admin_dashboard'))
     form = AdminLoginForm()
     if form.validate_on_submit():
         user = AdminUser.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
             return redirect(url_for('admin_dashboard'))
-        flash('Invalid username or password', 'danger')
+        flash('Invalid username or password.', 'error')
     return render_template('admin/login.html', form=form)
+
 
 @app.route('/admin/logout')
 @login_required
 def admin_logout():
     logout_user()
+    flash('You have been logged out.', 'info')
     return redirect(url_for('admin_login'))
 
-# ==========================================
-# ADMIN CMS ROUTES
-# ==========================================
+
+# ── Admin Dashboard ────────────────────────────────────────────────────────────
 
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
+    # 1. Time Logic
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0)
+
+    # 2. Stats Dictionary (Matches HTML exactly)
     stats = {
+        'this_month': Enquiry.query.filter(Enquiry.submitted_at >= month_start).count(),
         'total_enquiries': Enquiry.query.count(),
-        'this_month': Enquiry.query.filter(Enquiry.submitted_at >= datetime(datetime.now().year, datetime.now().month, 1)).count(),
         'total_articles': Article.query.count(),
         'total_events': Event.query.count(),
-        'total_team': TeamMember.query.count()
+        'total_team': TeamMember.query.count(),
+        'total_case_studies': 0, # Add count logic if you have a CaseStudy model
     }
-    recent_enquiries = Enquiry.query.order_by(Enquiry.submitted_at.desc()).limit(10).all()
-    return render_template('admin/dashboard.html', stats=stats, enquiries=recent_enquiries)
 
-@app.route('/admin/enquiry/<int:id>')
+    # 3. Geographic reach (Matches HTML 'country_data' dictionary)
+    country_results = db.session.query(Enquiry.country, func.count(Enquiry.id)).group_by(Enquiry.country).all()
+    country_data = {country: count for country, count in country_results if country}
+
+    # 4. Chart Data (Matches HTML 'monthly_data' and 'month_labels')
+    monthly_data = []
+    month_labels = []
+    for i in range(5, -1, -1):
+        d = now - timedelta(days=30 * i)
+        label = d.strftime('%b') # 'Jan', 'Feb', etc.
+        start = d.replace(day=1, hour=0, minute=0, second=0)
+        # Calculate end of that specific month
+        next_month = (start + timedelta(days=32)).replace(day=1)
+        
+        cnt = Enquiry.query.filter(Enquiry.submitted_at >= start, Enquiry.submitted_at < next_month).count()
+        monthly_data.append(cnt)
+        month_labels.append(label)
+
+    # 5. Recent Enquiries (Matches HTML 'enquiries' loop)
+    enquiries = Enquiry.query.order_by(desc(Enquiry.submitted_at)).limit(10).all()
+
+    return render_template('admin/dashboard.html',
+                           stats=stats, 
+                           enquiries=enquiries,
+                           country_data=country_data, 
+                           monthly_data=monthly_data, 
+                           month_labels=month_labels)
+
+
+# ── Admin Enquiries ────────────────────────────────────────────────────────────
+
+@app.route('/admin/enquiries')
+@login_required
+def admin_enquiries():
+    enquiries = Enquiry.query.order_by(desc(Enquiry.submitted_at)).all()
+    return render_template('admin/enquiries.html', enquiries=enquiries)
+
+
+@app.route('/admin/enquiries/<int:id>')
 @login_required
 def enquiry_detail(id):
-    enquiry = Enquiry.query.get_or_404(id)
+    enquiry = db.get_or_404(Enquiry, id)
     return render_template('admin/enquiry_detail.html', enquiry=enquiry)
 
-@app.route('/admin/export_enquiries')
+
+@app.route('/admin/enquiries/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_enquiry(id):
+    enquiry = db.get_or_404(Enquiry, id)
+    db.session.delete(enquiry)
+    db.session.commit()
+    flash('Enquiry deleted.', 'success')
+    return redirect(url_for('admin_enquiries'))
+
+
+@app.route('/admin/export')
 @login_required
 def export_enquiries():
-    enquiries = Enquiry.query.all()
-    output = 'enquiries_export.csv'
-    with open(output, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['ID', 'Name', 'Email', 'Phone', 'Company', 'Country', 'Submitted At'])
-        for e in enquiries:
-            writer.writerow([e.id, e.name, e.email, e.phone, e.company, e.country, e.submitted_at])
-    return send_file(output, as_attachment=True)
+    enquiries = Enquiry.query.order_by(desc(Enquiry.submitted_at)).all()
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['ID', 'Name', 'Email', 'Phone', 'Company', 'Country', 'Job Title', 'Details', 'Date'])
+    for e in enquiries:
+        writer.writerow([e.id, e.name, e.email, e.phone, e.company, e.country,
+                         e.job_title, e.job_details, e.submitted_at])
+    output = make_response(si.getvalue())
+    output.headers['Content-Disposition'] = 'attachment; filename=enquiries.csv'
+    output.headers['Content-type'] = 'text/csv'
+    return output
 
-# --- EVENT MANAGEMENT ---
-@app.route('/admin/manage_events')
+
+# ── Admin Events ───────────────────────────────────────────────────────────────
+
+@app.route('/admin/events')
 @login_required
-def manage_events():
-    events = Event.query.all()
+def admin_events():
+    events = Event.query.order_by(desc(Event.event_date)).all()
     return render_template('admin/manage_events.html', events=events)
 
-@app.route('/admin/add_event', methods=['GET', 'POST'])
+
+@app.route('/admin/events/add', methods=['GET', 'POST'])
 @login_required
 def add_event():
     form = EventForm()
     if form.validate_on_submit():
-        img_path = save_image(form.image.data, 'events')
-        event = Event(
-            name=form.name.data, description=form.description.data,
-            event_date=datetime.strptime(form.event_date.data, '%Y-%m-%d'),
-            location=form.location.data, image=img_path,
-            is_upcoming=form.is_upcoming.data, register_link=form.register_link.data
-        )
+        img_path = save_image(form.image.data, 'events') if form.image.data and form.image.data.filename else None
+        event = Event(name=form.name.data, description=form.description.data,
+                      event_date=form.event_date.data, location=form.location.data,
+                      image=img_path, is_upcoming=form.is_upcoming.data,
+                      register_link=form.register_link.data)
         db.session.add(event)
         db.session.commit()
         flash('Event added successfully!', 'success')
-        return redirect(url_for('manage_events'))
+        return redirect(url_for('admin_events'))
     return render_template('admin/add_event.html', form=form)
 
-@app.route('/admin/edit_event/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/admin/events/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_event(id):
-    event = Event.query.get_or_404(id)
+    event = db.get_or_404(Event, id)
     form = EventForm(obj=event)
     if form.validate_on_submit():
-        if form.image.data:
-            if event.image:
-                try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], event.image))
-                except: pass
+        if form.image.data and form.image.data.filename:
+            delete_image(event.image)
             event.image = save_image(form.image.data, 'events')
         event.name = form.name.data
         event.description = form.description.data
-        event.event_date = datetime.strptime(form.event_date.data, '%Y-%m-%d')
+        event.event_date = form.event_date.data
         event.location = form.location.data
         event.is_upcoming = form.is_upcoming.data
         event.register_link = form.register_link.data
         db.session.commit()
         flash('Event updated!', 'success')
-        return redirect(url_for('manage_events'))
+        return redirect(url_for('admin_events'))
     return render_template('admin/edit_event.html', form=form, event=event)
 
-@app.route('/admin/delete_event/<int:id>')
+
+@app.route('/admin/events/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_event(id):
-    event = Event.query.get_or_404(id)
-    if event.image:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], event.image))
-        except: pass
+    event = db.get_or_404(Event, id)
+    delete_image(event.image)
     db.session.delete(event)
     db.session.commit()
-    flash('Event deleted!', 'info')
-    return redirect(url_for('manage_events'))
+    flash('Event deleted.', 'success')
+    return redirect(url_for('admin_events'))
 
-# --- ARTICLE MANAGEMENT ---
-@app.route('/admin/manage_articles')
+
+# ── Admin Articles ─────────────────────────────────────────────────────────────
+
+@app.route('/admin/articles')
 @login_required
-def manage_articles():
-    articles = Article.query.all()
+def admin_articles():
+    articles = Article.query.order_by(desc(Article.published_at)).all()
     return render_template('admin/manage_articles.html', articles=articles)
 
-@app.route('/admin/add_article', methods=['GET', 'POST'])
+
+@app.route('/admin/articles/add', methods=['GET', 'POST'])
 @login_required
 def add_article():
     form = ArticleForm()
     if form.validate_on_submit():
-        img_path = save_image(form.cover_image.data, 'articles')
-        article = Article(
-            title=form.title.data, excerpt=form.excerpt.data, body=form.body.data,
-            category=form.category.data, cover_image=img_path,
-            author=form.author.data, is_published=form.is_published.data
-        )
+        img_path = save_image(form.cover_image.data, 'articles') if form.cover_image.data and form.cover_image.data.filename else None
+        article = Article(title=form.title.data, excerpt=form.excerpt.data, body=form.body.data,
+                          category=form.category.data, cover_image=img_path,
+                          author=form.author.data or 'AI-Solutions Team',
+                          is_published=form.is_published.data)
         db.session.add(article)
         db.session.commit()
-        flash('Article added!', 'success')
-        return redirect(url_for('manage_articles'))
+        flash('Article published!', 'success')
+        return redirect(url_for('admin_articles'))
     return render_template('admin/add_article.html', form=form)
 
-@app.route('/admin/edit_article/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/admin/articles/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_article(id):
-    article = Article.query.get_or_404(id)
+    article = db.get_or_404(Article, id)
     form = ArticleForm(obj=article)
     if form.validate_on_submit():
-        if form.cover_image.data:
-            if article.cover_image:
-                try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], article.cover_image))
-                except: pass
+        if form.cover_image.data and form.cover_image.data.filename:
+            delete_image(article.cover_image)
             article.cover_image = save_image(form.cover_image.data, 'articles')
         article.title = form.title.data
         article.excerpt = form.excerpt.data
@@ -313,55 +390,54 @@ def edit_article(id):
         article.is_published = form.is_published.data
         db.session.commit()
         flash('Article updated!', 'success')
-        return redirect(url_for('manage_articles'))
+        return redirect(url_for('admin_articles'))
     return render_template('admin/edit_article.html', form=form, article=article)
 
-@app.route('/admin/delete_article/<int:id>')
+
+@app.route('/admin/articles/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_article(id):
-    article = Article.query.get_or_404(id)
-    if article.cover_image:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], article.cover_image))
-        except: pass
+    article = db.get_or_404(Article, id)
+    delete_image(article.cover_image)
     db.session.delete(article)
     db.session.commit()
-    flash('Article deleted!', 'info')
-    return redirect(url_for('manage_articles'))
+    flash('Article deleted.', 'success')
+    return redirect(url_for('admin_articles'))
 
-# --- TESTIMONIAL MANAGEMENT ---
-@app.route('/admin/manage_testimonials')
+
+# ── Admin Testimonials ─────────────────────────────────────────────────────────
+
+@app.route('/admin/testimonials')
 @login_required
-def manage_testimonials():
+def admin_testimonials():
     testimonials = Testimonial.query.all()
     return render_template('admin/manage_testimonials.html', testimonials=testimonials)
 
-@app.route('/admin/add_testimonial', methods=['GET', 'POST'])
+
+@app.route('/admin/testimonials/add', methods=['GET', 'POST'])
 @login_required
 def add_testimonial():
     form = TestimonialForm()
     if form.validate_on_submit():
-        img_path = save_image(form.avatar.data, 'testimonials')
-        testimonial = Testimonial(
-            customer_name=form.customer_name.data, job_title=form.job_title.data,
-            company=form.company.data, quote=form.quote.data,
-            rating=form.rating.data, avatar=img_path, is_published=form.is_published.data
-        )
-        db.session.add(testimonial)
+        img_path = save_image(form.avatar.data, 'testimonials') if form.avatar.data and form.avatar.data.filename else None
+        t = Testimonial(customer_name=form.customer_name.data, job_title=form.job_title.data,
+                        company=form.company.data, quote=form.quote.data, rating=form.rating.data,
+                        avatar=img_path, is_published=form.is_published.data)
+        db.session.add(t)
         db.session.commit()
         flash('Testimonial added!', 'success')
-        return redirect(url_for('manage_testimonials'))
+        return redirect(url_for('admin_testimonials'))
     return render_template('admin/add_testimonial.html', form=form)
 
-@app.route('/admin/edit_testimonial/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/admin/testimonials/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_testimonial(id):
-    t = Testimonial.query.get_or_404(id)
+    t = db.get_or_404(Testimonial, id)
     form = TestimonialForm(obj=t)
     if form.validate_on_submit():
-        if form.avatar.data:
-            if t.avatar:
-                try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], t.avatar))
-                except: pass
+        if form.avatar.data and form.avatar.data.filename:
+            delete_image(t.avatar)
             t.avatar = save_image(form.avatar.data, 'testimonials')
         t.customer_name = form.customer_name.data
         t.job_title = form.job_title.data
@@ -371,181 +447,200 @@ def edit_testimonial(id):
         t.is_published = form.is_published.data
         db.session.commit()
         flash('Testimonial updated!', 'success')
-        return redirect(url_for('manage_testimonials'))
+        return redirect(url_for('admin_testimonials'))
     return render_template('admin/edit_testimonial.html', form=form, testimonial=t)
 
-@app.route('/admin/delete_testimonial/<int:id>')
+
+@app.route('/admin/testimonials/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_testimonial(id):
-    t = Testimonial.query.get_or_404(id)
-    if t.avatar:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], t.avatar))
-        except: pass
+    t = db.get_or_404(Testimonial, id)
+    delete_image(t.avatar)
     db.session.delete(t)
     db.session.commit()
-    flash('Testimonial deleted!', 'info')
-    return redirect(url_for('manage_testimonials'))
+    flash('Testimonial deleted.', 'success')
+    return redirect(url_for('admin_testimonials'))
 
-# --- SOLUTION MANAGEMENT ---
-@app.route('/admin/manage_solutions')
+
+# ── Admin Solutions ────────────────────────────────────────────────────────────
+
+@app.route('/admin/solutions')
 @login_required
-def manage_solutions():
-    solutions = Solution.query.all()
+def admin_solutions():
+    solutions = Solution.query.order_by(Solution.order_index).all()
     return render_template('admin/manage_solutions.html', solutions=solutions)
 
-@app.route('/admin/add_solution', methods=['GET', 'POST'])
+
+@app.route('/admin/solutions/add', methods=['GET', 'POST'])
 @login_required
 def add_solution():
     form = SolutionForm()
     if form.validate_on_submit():
-        img_path = save_image(form.image.data, 'solutions')
-        solution = Solution(
-            title=form.title.data, description=form.description.data,
-            icon_class=form.icon_class.data, image=img_path,
-            benefit_1=form.benefit_1.data, benefit_2=form.benefit_2.data,
-            benefit_3=form.benefit_3.data, anchor_id=form.anchor_id.data,
-            order_index=form.order_index.data, is_published=form.is_published.data
-        )
-        db.session.add(solution)
+        img_path = save_image(form.image.data, 'solutions') if form.image.data and form.image.data.filename else None
+        s = Solution(title=form.title.data, description=form.description.data,
+                     icon_class=form.icon_class.data, image=img_path,
+                     benefit_1=form.benefit_1.data, benefit_2=form.benefit_2.data,
+                     benefit_3=form.benefit_3.data, anchor_id=form.anchor_id.data,
+                     order_index=form.order_index.data or 0, is_published=form.is_published.data)
+        db.session.add(s)
         db.session.commit()
         flash('Solution added!', 'success')
-        return redirect(url_for('manage_solutions'))
+        return redirect(url_for('admin_solutions'))
     return render_template('admin/add_solution.html', form=form)
 
-@app.route('/admin/edit_solution/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/admin/solutions/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_solution(id):
-    sol = Solution.query.get_or_404(id)
-    form = SolutionForm(obj=sol)
+    s = db.get_or_404(Solution, id)
+    form = SolutionForm(obj=s)
     if form.validate_on_submit():
-        if form.image.data:
-            if sol.image:
-                try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], sol.image))
-                except: pass
-            sol.image = save_image(form.image.data, 'solutions')
-        sol.title = form.title.data
-        sol.description = form.description.data
-        sol.icon_class = form.icon_class.data
-        sol.benefit_1 = form.benefit_1.data
-        sol.benefit_2 = form.benefit_2.data
-        sol.benefit_3 = form.benefit_3.data
-        sol.anchor_id = form.anchor_id.data
-        sol.order_index = form.order_index.data
-        sol.is_published = form.is_published.data
+        if form.image.data and form.image.data.filename:
+            delete_image(s.image)
+            s.image = save_image(form.image.data, 'solutions')
+        s.title = form.title.data
+        s.description = form.description.data
+        s.icon_class = form.icon_class.data
+        s.benefit_1 = form.benefit_1.data
+        s.benefit_2 = form.benefit_2.data
+        s.benefit_3 = form.benefit_3.data
+        s.anchor_id = form.anchor_id.data
+        s.order_index = form.order_index.data or 0
+        s.is_published = form.is_published.data
         db.session.commit()
         flash('Solution updated!', 'success')
-        return redirect(url_for('manage_solutions'))
-    return render_template('admin/edit_solution.html', form=form, solution=sol)
+        return redirect(url_for('admin_solutions'))
+    return render_template('admin/edit_solution.html', form=form, solution=s)
 
-@app.route('/admin/delete_solution/<int:id>')
+
+@app.route('/admin/solutions/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_solution(id):
-    sol = Solution.query.get_or_404(id)
-    if sol.image:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], sol.image))
-        except: pass
-    db.session.delete(sol)
+    s = db.get_or_404(Solution, id)
+    delete_image(s.image)
+    db.session.delete(s)
     db.session.commit()
-    flash('Solution deleted!', 'info')
-    return redirect(url_for('manage_solutions'))
+    flash('Solution deleted.', 'success')
+    return redirect(url_for('admin_solutions'))
 
-# --- TEAM MANAGEMENT ---
-@app.route('/admin/manage_team')
+
+# ── Admin Team ─────────────────────────────────────────────────────────────────
+
+@app.route('/admin/team')
 @login_required
-def manage_team():
-    team = TeamMember.query.all()
+def admin_team():
+    team = TeamMember.query.order_by(TeamMember.order_index).all()
     return render_template('admin/manage_team.html', team=team)
 
-@app.route('/admin/add_team_member', methods=['GET', 'POST'])
+
+@app.route('/admin/team/add', methods=['GET', 'POST'])
 @login_required
 def add_team_member():
     form = TeamMemberForm()
     if form.validate_on_submit():
-        img_path = save_image(form.photo.data, 'team')
-        member = TeamMember(
-            name=form.name.data, job_title=form.job_title.data,
-            bio=form.bio.data, photo=img_path,
-            linkedin_url=form.linkedin_url.data, order_index=form.order_index.data,
-            is_published=form.is_published.data
-        )
-        db.session.add(member)
+        img_path = save_image(form.photo.data, 'team') if form.photo.data and form.photo.data.filename else None
+        m = TeamMember(name=form.name.data, job_title=form.job_title.data, bio=form.bio.data,
+                       photo=img_path, linkedin_url=form.linkedin_url.data,
+                       order_index=form.order_index.data or 0, is_published=form.is_published.data)
+        db.session.add(m)
         db.session.commit()
         flash('Team member added!', 'success')
-        return redirect(url_for('manage_team'))
+        return redirect(url_for('admin_team'))
     return render_template('admin/add_team_member.html', form=form)
 
-@app.route('/admin/edit_team_member/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/admin/team/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_team_member(id):
-    m = TeamMember.query.get_or_404(id)
+    m = db.get_or_404(TeamMember, id)
     form = TeamMemberForm(obj=m)
     if form.validate_on_submit():
-        if form.photo.data:
-            if m.photo:
-                try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], m.photo))
-                except: pass
+        if form.photo.data and form.photo.data.filename:
+            delete_image(m.photo)
             m.photo = save_image(form.photo.data, 'team')
         m.name = form.name.data
         m.job_title = form.job_title.data
         m.bio = form.bio.data
         m.linkedin_url = form.linkedin_url.data
-        m.order_index = form.order_index.data
+        m.order_index = form.order_index.data or 0
         m.is_published = form.is_published.data
         db.session.commit()
         flash('Team member updated!', 'success')
-        return redirect(url_for('manage_team'))
+        return redirect(url_for('admin_team'))
     return render_template('admin/edit_team_member.html', form=form, member=m)
 
-@app.route('/admin/delete_team_member/<int:id>')
+
+@app.route('/admin/team/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_team_member(id):
-    m = TeamMember.query.get_or_404(id)
-    if m.photo:
-        try: os.remove(os.path.join(app.config['UPLOAD_FOLDER'], m.photo))
-        except: pass
+    m = db.get_or_404(TeamMember, id)
+    delete_image(m.photo)
     db.session.delete(m)
     db.session.commit()
-    flash('Team member deleted!', 'info')
-    return redirect(url_for('manage_team'))
+    flash('Team member deleted.', 'success')
+    return redirect(url_for('admin_team'))
 
-# --- SETTINGS MANAGEMENT ---
+
+# ── Admin Settings ─────────────────────────────────────────────────────────────
+
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
-def settings():
-    settings_obj = SiteSettings.query.first()
-    if not settings_obj:
-        settings_obj = SiteSettings()
-        db.session.add(settings_obj)
+def admin_settings():
+    site = db.session.get(SiteSettings, 1)
+    if not site:
+        site = SiteSettings(id=1)
+        db.session.add(site)
         db.session.commit()
-    
-    form = SiteSettingsForm(obj=settings_obj)
-    if form.validate_on_submit():
-        if form.company_logo.data:
-            img_path = save_image(form.company_logo.data, 'logo')
-            settings_obj.company_logo = img_path
-        
-        settings_obj.company_name = form.company_name.data
-        settings_obj.tagline = form.tagline.data
-        settings_obj.address = form.address.data
-        settings_obj.email = form.email.data
-        settings_obj.phone = form.phone.data
-        settings_obj.linkedin_url = form.linkedin_url.data
-        settings_obj.twitter_url = form.twitter_url.data
-        settings_obj.facebook_url = form.facebook_url.data
-        settings_obj.instagram_url = form.instagram_url.data
-        settings_obj.github_url = form.github_url.data
-        db.session.commit()
-        flash('Settings updated!', 'success')
-    return render_template('admin/settings.html', form=form, settings=settings_obj)
 
-# Error Handlers
+    site_form = SiteSettingsForm(obj=site)
+    profile_form = AdminProfileForm()
+
+    if 'save_site' in request.form and site_form.validate_on_submit():
+        if site_form.company_logo.data and site_form.company_logo.data.filename:
+            delete_image(site.company_logo)
+            site.company_logo = save_image(site_form.company_logo.data, 'logo')
+        site.company_name = site_form.company_name.data
+        site.tagline = site_form.tagline.data
+        site.address = site_form.address.data
+        site.email = site_form.email.data
+        site.phone = site_form.phone.data
+        site.linkedin_url = site_form.linkedin_url.data
+        site.twitter_url = site_form.twitter_url.data
+        site.facebook_url = site_form.facebook_url.data
+        site.instagram_url = site_form.instagram_url.data
+        site.github_url = site_form.github_url.data
+        db.session.commit()
+        flash('Site settings saved!', 'success')
+        return redirect(url_for('admin_settings'))
+
+    if 'save_profile' in request.form and profile_form.validate_on_submit():
+        if not current_user.check_password(profile_form.current_password.data):
+            flash('Current password is incorrect.', 'error')
+        else:
+            if profile_form.profile_picture.data and profile_form.profile_picture.data.filename:
+                delete_image(current_user.profile_picture)
+                current_user.profile_picture = save_image(profile_form.profile_picture.data, 'admin')
+            if profile_form.new_password.data:
+                current_user.set_password(profile_form.new_password.data)
+            db.session.commit()
+            flash('Profile updated!', 'success')
+        return redirect(url_for('admin_settings'))
+
+    return render_template('admin/settings.html', site_form=site_form, profile_form=profile_form, site=site)
+
+
+# ── Error Handlers ─────────────────────────────────────────────────────────────
+
 @app.errorhandler(404)
-def page_not_found(e):
+def not_found(e):
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
-def internal_server_error(e):
+def server_error(e):
     return render_template('500.html'), 500
 
+
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

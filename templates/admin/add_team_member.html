@@ -1,46 +1,81 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Add Team Member{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_team') }}">Team</a>
+<span class="bc-sep">/</span><span>Add</span>
+{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen pt-20">
-    <!-- Sidebar (Same as above) -->
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold text-gradient mb-10">Add Team Member</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6">
-                {{ form.hidden_tag() }}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Full Name</label>
-                        {{ form.name(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Job Title</label>
-                        {{ form.job_title(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Short Bio</label>
-                    {{ form.bio(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Photo</label>
-                        {{ form.photo(class="text-sm text-neutral-400") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">LinkedIn URL</label>
-                        {{ form.linkedin_url(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
-                    {{ form.is_published(class="w-4 h-4") }}
-                    <label class="text-sm font-medium text-neutral-300">Visible on Team Page</label>
-                </div>
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Member</button>
-                    <a href="{{ url_for('manage_team') }}" class="glass px-8 py-3 rounded-full font-bold text-center">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="page-header">
+    <h1 class="page-title">Add Team Member</h1>
+    <a href="{{ url_for('admin_team') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-input") }}
+                {% for e in form.name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.job_title.label(class="form-label") }}
+                {{ form.job_title(class="form-input") }}
+                {% for e in form.job_title.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.bio.label(class="form-label") }}
+            {{ form.bio(class="form-input form-textarea", rows=5, placeholder="Short biography...") }}
+            {% for e in form.bio.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.linkedin_url.label(class="form-label") }}
+                {{ form.linkedin_url(class="form-input", placeholder="https://linkedin.com/in/...") }}
+                {% for e in form.linkedin_url.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.order_index.label(class="form-label") }}
+                {{ form.order_index(class="form-input") }}
+                {% for e in form.order_index.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Profile Photo <span class="label-hint">(optional)</span></label>
+            <div class="upload-zone upload-zone--avatar" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-user-circle"></i>
+                    <p>Upload profile photo</p>
+                    <span>JPG, PNG — max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview upload-preview--avatar" style="display:none" alt="Preview">
+            </div>
+            {{ form.photo(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.photo.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_published(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Show on website
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_team') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');
+</script>
 {% endblock %}

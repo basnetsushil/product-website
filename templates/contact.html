@@ -1,73 +1,99 @@
 {% extends "base.html" %}
-
+{% block title %}Contact Us{% endblock %}
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-6 py-20 bg-black relative overflow-hidden">
-    <!-- Background Glows -->
-    <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div class="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px]"></div>
-    </div>
 
-    <div class="max-w-4xl w-full z-10">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-6xl font-bold text-gradient tracking-tight mb-4">Get in Touch</h1>
-            <p class="text-neutral-400">Tell us about your requirements and let's build the future of the digital employee experience together.</p>
-        </div>
-
-        <div class="glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl border border-white/10 backdrop-blur-xl">
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {{ form.hidden_tag() }}
-
-                <!-- Name -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Full Name</label>
-                    {{ form.name(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="John Doe") }}
-                </div>
-
-                <!-- Email -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Email Address</label>
-                    {{ form.email(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="john@company.com") }}
-                </div>
-
-                <!-- Phone -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Phone Number</label>
-                    {{ form.phone(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="+44 ...") }}
-                </div>
-
-                <!-- Company -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Company Name</label>
-                    {{ form.company(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="AI Corp") }}
-                </div>
-
-                <!-- Country -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Country</label>
-                    {{ form.country(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="United Kingdom") }}
-                </div>
-
-                <!-- Job Title -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Job Title</label>
-                    {{ form.job_title(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all", placeholder="CTO / Manager") }}
-                </div>
-
-                <!-- Job Details (Full Width) -->
-                <div class="flex flex-col gap-2 md:col-span-2">
-                    <label class="text-xs font-semibold text-neutral-400 uppercase tracking-wider ml-1">Job Requirements / Details</label>
-                    {{ form.job_details(class="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-all h-40", placeholder="Please describe your specific AI needs...") }}
-                </div>
-
-                <!-- Submit Button -->
-                <div class="md:col-span-2 pt-4">
-                    <button type="submit" class="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-neutral-200 transition-all transform hover:scale-[1.01] active:scale-95 cursor-pointer shadow-lg shadow-white/10">
-                        Send Enquiry
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+<!-- Page Hero -->
+<div class="page-hero">
+  <p class="page-label">Contact</p>
+  <h1>Get in <span style="color:var(--acc)">Touch</span></h1>
+  <p>Ready to revolutionize your workflow? Our experts are standing by to help you prototype your AI future.</p>
 </div>
+
+<!-- Contact Grid -->
+<div class="section">
+  <div class="contact-grid">
+
+    <!-- LEFT: Company Info -->
+    <div class="contact-info">
+      <h2>Let's Start a <span style="color:var(--acc)">Conversation</span></h2>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="fas fa-envelope"></i></div>
+        <div>
+          <div class="contact-detail-label">Email Us</div>
+          <div class="contact-detail-value">{{ settings.email if settings else 'info@ai-solutions.uk' }}</div>
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="fas fa-phone"></i></div>
+        <div>
+          <div class="contact-detail-label">Call Us</div>
+          <div class="contact-detail-value">{{ settings.phone if settings else '+44 (0)191 123 4567' }}</div>
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="fas fa-location-dot"></i></div>
+        <div>
+          <div class="contact-detail-label">Visit Us</div>
+          <div class="contact-detail-value">{{ settings.address if settings else 'Sunderland, UK' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Form -->
+    <div>
+      <form method="POST" action="{{ url_for('contact') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          {{ form.name.label }}
+          {{ form.name(class="form-control", placeholder="Enter your full name") }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(class="form-control", placeholder="email@example.com") }}
+          </div>
+          <div class="form-group">
+            {{ form.phone.label }}
+            {{ form.phone(class="form-control", placeholder="+44 ...") }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.company.label }}
+            {{ form.company(class="form-control", placeholder="Company Name") }}
+          </div>
+          <div class="form-group">
+            {{ form.country.label }}
+            {{ form.country(class="form-control") }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          {{ form.job_title.label }}
+          {{ form.job_title(class="form-control", placeholder="e.g. Product Manager") }}
+        </div>
+
+        <div class="form-group">
+          {{ form.job_details.label }}
+          {{ form.job_details(class="form-control", placeholder="Tell us about your project...") }}
+        </div>
+
+        <div style="margin-top: 8px;">
+          {{ form.submit(class="btn btn-primary", style="width:100%;cursor:pointer;justify-content:center;") }}
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:14px;text-align:center;">
+            No account creation required. We will contact you via email.
+          </p>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
 {% endblock %}

@@ -2,82 +2,80 @@ from app import app, db
 from models import AdminUser, SiteSettings, Solution, Article, Event, Testimonial, TeamMember
 from datetime import datetime, timedelta
 
-def seed_database():
-    with app.app_context():
-        print("🌱 Seeding database... please wait.")
+with app.app_context():
+    db.drop_all()
+    db.create_all()
 
-        # 1. Clean existing data to avoid duplicates
-        db.drop_all()
-        db.create_all()
+    # Admin user
+    admin = AdminUser(username='admin')
+    admin.set_password('admin123')
+    db.session.add(admin)
 
-        # 2. Create Admin User
-        admin = AdminUser(username='admin')
-        admin.set_password('admin123')
-        db.session.add(admin)
+    # Site settings
+    settings = SiteSettings(
+        id=1,
+        company_name='AI-Solutions',
+        tagline='Innovate. Automate. Elevate.',
+        address='Sunderland, SR1 1AA, UK',
+        email='info@ai-solutions.uk',
+        phone='+44 (0)191 123 4567',
+        linkedin_url='https://linkedin.com',
+        twitter_url='https://twitter.com',
+        github_url='https://github.com'
+    )
+    db.session.add(settings)
 
-        # 3. Create Site Settings
-        settings = SiteSettings(
-            company_name="AI-Solutions",
-            tagline="Architecting the Intelligence of Tomorrow in the Heart of Sunderland.",
-            address="123 Tech Hub, Sunderland, SR1 1AA, United Kingdom",
-            email="contact@ai-solutions.co.uk",
-            phone="+44 191 555 0123",
-            linkedin_url="https://linkedin.com/company/ai-solutions",
-            twitter_url="https://twitter.com/aisolutions_uk",
-            github_url="https://github.com/ai-solutions-uk"
-        )
-        db.session.add(settings)
+    # Solutions
+    solutions = [
+        Solution(title='Intelligent Process Automation', description='Eliminate repetitive manual tasks with AI-driven automation. Our RPA solutions reduce operational costs by up to 70% while improving accuracy and freeing your team for strategic work.', icon_class='fas fa-robot', benefit_1='70% reduction in manual processing time', benefit_2='24/7 automated workflows with zero downtime', benefit_3='Seamless integration with existing systems', anchor_id='automation', order_index=1),
+        Solution(title='Predictive Analytics & Insights', description='Transform raw data into actionable business intelligence. Our ML models identify patterns, forecast trends, and surface opportunities hidden in your data that human analysis would miss.', icon_class='fas fa-chart-line', benefit_1='Real-time dashboards and reporting', benefit_2='Accurate demand forecasting up to 90 days ahead', benefit_3='Anomaly detection and risk alerts', anchor_id='analytics', order_index=2),
+        Solution(title='Natural Language Processing', description='Give your business the power of language AI. From sentiment analysis to document processing and intelligent chatbots, our NLP solutions understand context and meaning at scale.', icon_class='fas fa-comments', benefit_1='Automated document classification and extraction', benefit_2='Multilingual customer support at scale', benefit_3='Real-time sentiment monitoring', anchor_id='nlp', order_index=3),
+        Solution(title='Computer Vision Systems', description='Deploy AI that sees and understands visual content. From quality control on production lines to security monitoring and product recognition, our vision systems work around the clock.', icon_class='fas fa-eye', benefit_1='99.8% defect detection accuracy', benefit_2='Real-time video analysis at scale', benefit_3='Reduced inspection costs by 60%', anchor_id='vision', order_index=4),
+        Solution(title='AI Strategy Consulting', description='Navigate the AI landscape with confidence. Our expert consultants assess your operations, identify high-impact use cases, and create a practical roadmap to AI adoption that delivers measurable ROI.', icon_class='fas fa-lightbulb', benefit_1='Comprehensive AI readiness assessment', benefit_2='Prioritised use-case roadmap', benefit_3='Change management and training support', anchor_id='consulting', order_index=5),
+        Solution(title='Custom ML Model Development', description='Off-the-shelf AI rarely fits perfectly. We design, train and deploy bespoke machine learning models built specifically for your data, your industry and your business objectives.', icon_class='fas fa-code', benefit_1='Domain-specific model training on your data', benefit_2='Continuous model monitoring and retraining', benefit_3='Full IP ownership by your organisation', anchor_id='custom-ml', order_index=6),
+    ]
+    db.session.add_all(solutions)
 
-        # 4. Seed 6 Solutions
-        solutions = [
-            Solution(title="Predictive Analytics", description="Forecasting market trends using deep learning models.", icon_class="📈", benefit_1="Reduce risk", benefit_2="Optimize stock", benefit_3="Increase ROI", order_index=1),
-            Solution(title="NLP Engine", description="Custom Large Language Models tailored for your corporate data.", icon_class="💬", benefit_1="Automate support", benefit_2="Semantic search", benefit_3="Sentiment analysis", order_index=2),
-            Solution(title="Computer Vision", description="Real-time object detection and image recognition systems.", icon_class="👁️", benefit_1="Quality control", benefit_2="Security automation", benefit_3="Visual analytics", order_index=3),
-            Solution(title="RPA Integration", description="Robotic Process Automation to eliminate repetitive manual tasks.", icon_class="🤖", benefit_1="Save 40% time", benefit_2="Zero human error", benefit_3="24/7 Operation", order_index=4),
-            Solution(title="AI Strategy", description="Consultancy to navigate the complex landscape of AI adoption.", icon_class="🗺️", benefit_1="Roadmap design", benefit_2="Tech stack audit", benefit_3="KPI alignment", order_index=5),
-            Solution(title="Edge AI", description="Deploying intelligence directly on hardware for zero-latency.", icon_class="⚡", benefit_1="No cloud lag", benefit_2="Enhanced privacy", benefit_3="Bandwidth saving", order_index=6),
-        ]
-        db.session.bulk_save_objects(solutions)
+    # Articles
+    articles = [
+        Article(title='How AI is Transforming Manufacturing in the North East', excerpt='From predictive maintenance to quality control, AI is reshaping how North East manufacturers operate — and Sunderland is at the heart of it.', body='''The manufacturing sector in the North East of England is undergoing a quiet revolution. Driven by advances in machine learning and computer vision, factories that once relied on manual inspection and reactive maintenance are now embracing intelligent, data-driven operations.\n\nAt AI-Solutions, we have worked with several regional manufacturers to deploy predictive maintenance systems that analyse vibration, temperature and acoustic sensor data in real time. The results have been remarkable: one automotive parts supplier reduced unplanned downtime by 43% in the first six months.\n\nQuality control is another area where AI is proving transformative. Computer vision systems can inspect hundreds of components per minute with accuracy that exceeds human inspectors — and they never tire. Our vision systems at a local electronics manufacturer now catch defects at a rate that has reduced warranty claims by over a third.\n\nThe journey to AI adoption does not have to be overwhelming. The most successful implementations we have seen start small: identify one bottleneck, deploy a focused AI solution, measure the results, and iterate. The key is choosing the right partner who understands both the technology and your industry.\n\nSunderland has real advantages here. The region has a strong engineering culture, competitive operating costs, and growing access to AI talent through its universities. Businesses that act now will build a durable competitive edge.''', category='Industry Insights', author='Dr. Sarah Chen', is_published=True),
+        Article(title='5 Signs Your Business Is Ready for AI Automation', excerpt='Not every organisation is ready to deploy AI. Here are the five indicators that show your business has the right foundations in place.', body='''Artificial intelligence promises extraordinary efficiency gains — but deploying it prematurely can be costly and demoralising. How do you know when your organisation is truly ready?\n\nAfter working with dozens of businesses across the UK, we have identified five reliable indicators of AI readiness.\n\n**1. You have clean, accessible data**\nAI models are only as good as the data they learn from. If your operational data is fragmented, inconsistent or locked in legacy systems, your first priority should be data infrastructure — not AI.\n\n**2. You have a clear problem to solve**\nThe worst AI projects start with the technology and look for a use case. The best ones start with a specific, measurable business problem: too many hours spent on invoice processing, too many quality defects getting through, too much demand forecasting error.\n\n**3. Leadership is genuinely committed**\nAI transformation requires cultural as well as technical change. Without visible commitment from senior leadership — including budget, time, and willingness to adapt processes — even brilliant technology will stall.\n\n**4. You have process documentation**\nAI learns from patterns. If your processes are not documented and consistent, automation will automate the chaos. Before deploying AI, map and standardise the workflows you want to improve.\n\n**5. You are willing to iterate**\nThe first version of any AI system is rarely the best version. Organisations that succeed with AI treat it as an ongoing capability to develop, not a one-time project to deliver.\n\nIf you can tick four or five of these boxes, you are well positioned to begin your AI journey. If fewer, do not despair — the gaps are addressable, and knowing where they are is the first step.''', category='Business Strategy', author='James Whitmore', is_published=True),
+        Article(title='The Role of NLP in Modern Customer Service', excerpt='Natural language processing is enabling businesses to handle customer queries at scale without sacrificing quality. Here is how it works in practice.', body='''Customer service has always been a balance between quality and scale. Human agents deliver empathy and nuance, but they are expensive and finite. Automated systems handle volume, but they have historically felt clunky and frustrating.\n\nNatural language processing is changing that balance fundamentally.\n\nModern NLP models understand not just keywords but context, intent and even sentiment. When a customer sends a message that says "I've been waiting three weeks and nothing has arrived," a sophisticated NLP system recognises frustration, identifies the issue as a delayed order, and routes it to the appropriate resolution pathway — all within milliseconds.\n\nAt AI-Solutions, we have deployed NLP-powered customer service tools for clients in retail, financial services and logistics. The patterns we see are consistent: first-contact resolution rates improve, average handling times fall, and — perhaps most surprisingly — customer satisfaction scores often rise even as the proportion of human-handled interactions decreases.\n\nThe reason is simple: good AI handles the routine, so human agents spend their time on cases that genuinely benefit from human empathy and judgement. Both the AI and the humans are doing what they are best at.\n\nImplementation does require investment in training data and integration, but the operational returns typically justify the cost within twelve to eighteen months. For high-volume customer service operations, the case is often even stronger.''', category='Technology', author='Priya Sharma', is_published=True),
+        Article(title='Building an AI Ethics Framework for Your Organisation', excerpt='As AI becomes central to business operations, organisations need structured approaches to ensure their systems are fair, transparent and accountable.', body='''The question of AI ethics is no longer abstract. As machine learning systems make or influence decisions in hiring, lending, healthcare and law enforcement, the consequences of biased or opaque AI are increasingly visible — and increasingly costly.\n\nOrganisations deploying AI have both a moral and a business imperative to do so responsibly. Regulatory frameworks are tightening: the EU AI Act is already reshaping requirements for high-risk AI applications, and UK regulators are following with their own guidance.\n\nBut beyond compliance, ethical AI simply performs better. Models built on biased data make systematically worse predictions. Systems that cannot be explained cannot be trusted by the people who use them. And AI that causes harm — even unintentionally — creates reputational and legal risk.\n\nHere is a practical framework for organisations beginning this work:\n\n**Audit your training data.** Where did it come from? What populations does it represent? What biases might it contain? This is uncomfortable work, but it is foundational.\n\n**Document your model decisions.** For any AI system making consequential decisions, maintain records of how the model was trained, validated and monitored.\n\n**Build in human oversight.** Identify where human review is essential, and design workflows that make it easy for humans to override AI recommendations.\n\n**Establish a review process.** Appoint responsibility for AI ethics within your organisation — not just as a compliance function, but as an ongoing quality discipline.\n\nEthical AI is not a constraint on innovation. It is the foundation on which sustainable AI innovation is built.''', category='Ethics & Governance', author='AI-Solutions Team', is_published=True),
+    ]
+    db.session.add_all(articles)
 
-        # 5. Seed 4 Articles
-        articles = [
-            Article(title="The Future of AI in the North East", excerpt="How Sunderland is becoming a hub for AI innovation.", body="Full article content about the North East tech boom...", category="Insights", author="Dr. Sarah Chen", published_at=datetime.utcnow()),
-            Article(title="Scaling LLMs for Enterprise", excerpt="Moving from a prototype to a production-ready AI system.", body="Full article about deployment strategies...", category="Technical", author="James Wilson", published_at=datetime.utcnow() - timedelta(days=2)),
-            Article(title="Ethical AI Frameworks", excerpt="Why transparency is the most important feature of any AI.", body="Discussion on bias and ethics in machine learning...", category="Ethics", author="Dr. Sarah Chen", published_at=datetime.utcnow() - timedelta(days=5)),
-            Article(title="Case Study: Retail Automation", excerpt="How we saved a local retailer £50k/year using AI.", body="Detailed breakdown of the retail project...", category="Case Study", author="James Wilson", published_at=datetime.utcnow() - timedelta(days=10)),
-        ]
-        db.session.bulk_save_objects(articles)
+    # Events
+    now = datetime.utcnow()
+    events = [
+        Event(name='AI in Manufacturing Summit 2024', description='A full-day conference bringing together manufacturers, technologists and policymakers to explore how AI is reshaping production. Featuring keynotes, panel discussions and live demonstrations from the factory floor.', event_date=now - timedelta(days=120), location='Stadium of Light, Sunderland', is_upcoming=False),
+        Event(name='Data-Driven Business Workshop', description='A hands-on half-day workshop for business leaders exploring how to build data strategies that support AI adoption. Covers data governance, infrastructure choices and change management in practical terms.', event_date=now - timedelta(days=45), location='National Glass Centre, Sunderland', is_upcoming=False),
+        Event(name='AI Innovation Forum — North East 2025', description='Join 300+ business leaders, technologists and academics for our flagship annual event. This year\'s theme: Practical AI — cutting through the hype to deliver real business value. Register now to secure early-bird pricing.', event_date=now + timedelta(days=60), location='Sunderland Culture, Sunderland', is_upcoming=True, register_link='https://ai-solutions.uk/forum-2025'),
+        Event(name='Introduction to Machine Learning — Free Webinar', description='A free 90-minute online session for business decision-makers who want to understand what machine learning can — and cannot — do for their organisation. No technical background required.', event_date=now + timedelta(days=21), location='Online (Zoom)', is_upcoming=True, register_link='https://ai-solutions.uk/webinar'),
+    ]
+    db.session.add_all(events)
 
-        # 6. Seed 4 Events
-        events = [
-            Event(name="Sunderland AI Summit", description="The largest AI gathering in the North East.", event_date=datetime(2024, 12, 15), location="Sunderland Stadium", is_upcoming=True),
-            Event(name="ML Workshop", description="Hands-on training with PyTorch and TensorFlow.", event_date=datetime(2024, 11, 10), location="Virtual", is_upcoming=True),
-            Event(name="AI Ethics Webinar", description="Discussing the future of regulation.", event_date=datetime(2024, 8, 20), location="Virtual", is_upcoming=False),
-            Event(name="Tech Expo 2024", description="Showcasing our latest 3D AI interfaces.", event_date=datetime(2024, 5, 1), location="Sunderland City Centre", is_upcoming=False),
-        ]
-        db.session.bulk_save_objects(events)
+    # Testimonials
+    testimonials = [
+        Testimonial(customer_name='Marcus Ashford', job_title='Operations Director', company='Ashford Industrial Group', quote='AI-Solutions transformed our production scheduling. What used to take our team a full day of manual work now happens automatically, and the accuracy has improved by nearly 30%. The ROI was evident within the first quarter.', rating=5, is_published=True),
+        Testimonial(customer_name='Diane Okafor', job_title='Head of Customer Experience', company='Northern Retail Co.', quote='We were sceptical that AI could handle the nuance of our customer interactions. We were wrong. The NLP system AI-Solutions deployed understands context in a way that genuinely surprised us, and our satisfaction scores are up 18 points since launch.', rating=5, is_published=True),
+        Testimonial(customer_name='Tom Brightwell', job_title='Chief Technology Officer', company='Brightwell Logistics', quote='The predictive analytics platform gives us visibility we never had before. We can now anticipate demand spikes two months out and position stock accordingly. It has fundamentally changed how we plan.', rating=5, is_published=True),
+        Testimonial(customer_name='Fatima Al-Rashid', job_title='Managing Director', company='Sunderland FinTech Ltd', quote='The AI-Solutions team took the time to understand our industry before recommending anything. That consultative approach meant the solution they built was genuinely fit for purpose, not a generic product bolted onto our processes.', rating=4, is_published=True),
+        Testimonial(customer_name='Peter Langley', job_title='Quality Manager', company='Langley Precision Engineering', quote='Our defect rate on the production line has halved since deploying the computer vision system. For a business where quality is everything, that is not just a cost saving — it is a competitive advantage.', rating=5, is_published=True),
+        Testimonial(customer_name='Rachel Drummond', job_title='Digital Transformation Lead', company='Northern Health Trust', quote='Navigating AI adoption in a healthcare context requires particular care around data and ethics. AI-Solutions guided us through that complexity with expertise and professionalism. We now have a roadmap we are genuinely confident in.', rating=4, is_published=True),
+    ]
+    db.session.add_all(testimonials)
 
-        # 7. Seed 6 Testimonials
-        testimonials = [
-            Testimonial(customer_name="Alice Thompson", job_title="CEO", company="Logistics UK", quote="AI-Solutions transformed our supply chain overnight.", rating=5),
-            Testimonial(customer_name="Bob Richards", job_title="CTO", company="Sunderland Retail", quote="The most professional AI team we've ever worked with.", rating=5),
-            Testimonial(customer_name="Claire Zhang", job_title="Ops Manager", company="Global Tech", quote="Their NLP engine reduced our support tickets by 60%.", rating=4),
-            Testimonial(customer_name="David Smith", job_title="Founder", company="StartupX", quote="Incredible vision and technical execution.", rating=5),
-            Testimonial(customer_name="Emma Watson", job_title="Director", company="HealthCore", quote="Secure and efficient AI implementation.", rating=5),
-            Testimonial(customer_name="Frank Miller", job_title="Lead Eng", company="AutoWorks", quote="Edge AI has completely changed our assembly line.", rating=4),
-        ]
-        db.session.bulk_save_objects(testimonials)
+    # Team members
+    team = [
+        TeamMember(name='Dr. Sarah Chen', job_title='Chief Executive Officer', bio='Sarah founded AI-Solutions after a decade of applied AI research at Newcastle University. She holds a PhD in Machine Learning and has advised the UK Government on AI policy. Her vision is to make enterprise AI accessible to businesses of every size.', order_index=1, is_published=True),
+        TeamMember(name='James Whitmore', job_title='Chief Technology Officer', bio='James brings 15 years of software engineering and data science experience to AI-Solutions. Previously Head of Data at a FTSE 100 retailer, he has led AI projects across manufacturing, logistics and financial services. He is passionate about responsible, explainable AI.', order_index=2, is_published=True),
+        TeamMember(name='Priya Sharma', job_title='Head of Consulting', bio='Priya leads our client-facing consulting practice, helping organisations assess their AI readiness and build practical adoption roadmaps. With a background in management consulting and an MSc in Data Science, she bridges the gap between business strategy and technical delivery.', order_index=3, is_published=True),
+    ]
+    db.session.add_all(team)
 
-        # 8. Seed 3 Team Members
-        team = [
-            TeamMember(name="Dr. Sarah Chen", job_title="Chief AI Scientist", bio="Former researcher at MIT, specializing in Neural Networks.", order_index=1),
-            TeamMember(name="James Wilson", job_title="Head of Engineering", bio="Full-stack architect with 15 years of experience in scalable systems.", order_index=2),
-            TeamMember(name="Marcus Thorne", job_title="Product Designer", bio="Expert in immersive 3D UI and human-centered AI design.", order_index=3),
-        ]
-        db.session.bulk_save_objects(team)
-
-        db.session.commit()
-        print("✅ Database seeded successfully!")
-
-if __name__ == "__main__":
-    seed_database()
+    db.session.commit()
+    print("✓ Database seeded successfully!")
+    print("  Admin: username=admin | password=admin123")
+    print("  Visit: http://localhost:5000")
+    print("  Admin: http://localhost:5000/admin/login")
