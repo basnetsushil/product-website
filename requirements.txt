@@ -6,7 +6,7 @@ Flask-Mail==0.9.1
 Werkzeug==2.3.7
 email-validator==2.0.0
 WTForms==3.0.1
-SQLAlchemy==2.0.21
+SQLAlchemy==2.0.23
 Pillow==11.0.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
