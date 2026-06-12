@@ -17,7 +17,14 @@ from models import db, AdminUser, Enquiry, Article, Event, Testimonial, Solution
 from forms import (ContactForm, AdminLoginForm, EventForm, ArticleForm, TestimonialForm,
                    SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm)
 
+from flask import Flask
+from flask_wtf.csrf import CSRFProtect
+
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'my-secret-key'
+
+csrf = CSRFProtect(app)
 
 # Config
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-prod-2024')
