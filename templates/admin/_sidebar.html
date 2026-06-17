@@ -39,6 +39,9 @@
             <a href="{{ url_for('admin_team') }}" class="nav-item {% if 'team' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-users"></i><span>Team</span>
             </a>
+            <a href="{{ url_for('admin_gallery') }}" class="nav-item {% if 'gallery' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-images"></i><span>Gallery</span>
+            </a>
             <a href="{{ url_for('case_studies') }}" class="nav-item {% if 'case_stud' in request.endpoint %}active{% endif %}">
                 <i class="fas fa-briefcase"></i><span>Case Studies</span>
             </a>

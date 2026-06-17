@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery - {{ settings.company_name if settings else 'AI-Solutions' }}{% endblock %}
+
+{% block content %}
+<section class="page-header-section">
+    <div class="container">
+        <div class="page-header-content">
+            <h1 class="page-title">Gallery</h1>
+            <p class="page-subtitle">Explore our work and projects</p>
+        </div>
+    </div>
+</section>
+
+<section class="gallery-section">
+    <div class="container">
+        <!-- Category Filter (Optional) -->
+        <div class="gallery-controls">
+            <button class="gallery-filter-btn active" data-filter="all">All</button>
+            {% set categories = [] %}
+            {% for img in galleries %}
+                {% if img.category not in categories %}
+                    {% set _ = categories.append(img.category) %}
+                    <button class="gallery-filter-btn" data-filter="{{ img.category|lower|replace(' ', '-') }}">
+                        {{ img.category }}
+                    </button>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Gallery Grid -->
+        {% if galleries %}
+        <div class="gallery-grid">
+            {% for img in galleries %}
+            <div class="gallery-item" data-category="{{ img.category|lower|replace(' ', '-') }}">
+                <div class="gallery-item-wrapper">
+                    <img src="{{ url_for('static', filename=img.image) }}" alt="{{ img.title }}" class="gallery-item-img">
+                    <div class="gallery-item-overlay">
+                        <div class="gallery-item-content">
+                            <h3 class="gallery-item-title">{{ img.title }}</h3>
+                            {% if img.description %}
+                            <p class="gallery-item-description">{{ img.description }}</p>
+                            {% endif %}
+                            {% if img.category %}
+                            <span class="gallery-item-category">{{ img.category }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('static', filename=img.image) }}" class="gallery-item-link" data-lightbox="gallery" title="{{ img.title }}">
+                        <i class="fas fa-expand"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <div class="empty-state">
+                <i class="fas fa-images"></i>
+                <h3>No gallery images yet</h3>
+                <p>Gallery images will appear here soon.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.gallery-section {
+    padding: 80px 0;
+    background: #f9fafb;
+}
+
+.gallery-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.gallery-filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.gallery-filter-btn:hover,
+.gallery-filter-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+    }
+}
+
+.gallery-item {
+    opacity: 1;
+    animation: fadeIn 0.5s ease;
+}
+
+.gallery-item.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.gallery-item-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 300px;
+}
+
+.gallery-item-wrapper:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.gallery-item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item-wrapper:hover .gallery-item-img {
+    transform: scale(1.05);
+}
+
+.gallery-item-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-item-wrapper:hover .gallery-item-overlay {
+    opacity: 1;
+}
+
+.gallery-item-content {
+    width: 100%;
+}
+
+.gallery-item-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    margin: 0 0 8px 0;
+}
+
+.gallery-item-description {
+    font-size: 13px;
+    color: #e5e7eb;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.gallery-item-category {
+    display: inline-block;
+    font-size: 11px;
+    background: #3b82f6;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.gallery-item-link {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.gallery-item-wrapper:hover .gallery-item-link {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.gallery-item-link:hover {
+    background: #2563eb;
+}
+
+.empty-state-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.empty-state {
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #d1d5db;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    color: #6b7280;
+    margin: 0 0 10px 0;
+}
+
+.empty-state p {
+    color: #9ca3af;
+    margin: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+    const galleryItems = document.querySelectorAll('.gallery-item');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update active button
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Filter items
+            galleryItems.forEach(item => {
+                if (filter === 'all' || item.dataset.category === filter) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

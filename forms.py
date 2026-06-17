@@ -126,6 +126,15 @@ class SiteSettingsForm(FlaskForm):
     github_url = StringField('GitHub', validators=[Optional(), Length(max=300)])
     submit = SubmitField('Save Settings')
 
+class GalleryForm(FlaskForm):
+    title = StringField('Image Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Description', validators=[Optional()])
+    category = StringField('Category', validators=[Optional(), Length(max=100)])
+    image = FileField('Gallery Image', validators=[DataRequired(), FileAllowed(ALLOWED, 'Images only!')])
+    order_index = IntegerField('Order', default=0, validators=[Optional()])
+    is_published = BooleanField('Published', default=True)
+    submit = SubmitField('Save Gallery Image')
+
 class AdminProfileForm(FlaskForm):
     profile_picture = FileField('Profile Picture', validators=[Optional(), FileAllowed(ALLOWED, 'Images only!')])
     new_password = PasswordField('New Password', validators=[Optional(), Length(min=6)])

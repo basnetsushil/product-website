@@ -13,9 +13,9 @@ from sqlalchemy import desc, func
 from werkzeug.utils import secure_filename
 from PIL import Image as PILImage
 
-from models import db, AdminUser, Enquiry, Article, Event, Testimonial, Solution, TeamMember, SiteSettings
+from models import db, AdminUser, Enquiry, Article, Event, Testimonial, Solution, TeamMember, SiteSettings, Gallery
 from forms import (ContactForm, AdminLoginForm, EventForm, ArticleForm, TestimonialForm,
-                   SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm)
+                   SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm, GalleryForm)
 
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
@@ -49,7 +49,7 @@ login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'error'
 
 # Create upload folders
-for folder in ['events', 'articles', 'testimonials', 'solutions', 'team', 'logo', 'admin']:
+for folder in ['events', 'articles', 'testimonials', 'solutions', 'team', 'logo', 'admin', 'gallery']:
     os.makedirs(os.path.join('static/uploads', folder), exist_ok=True)
 
 
@@ -154,6 +154,12 @@ def events():
     upcoming = Event.query.filter_by(is_upcoming=True).order_by(Event.event_date).all()
     past = Event.query.filter_by(is_upcoming=False).order_by(desc(Event.event_date)).all()
     return render_template('events.html', upcoming=upcoming, past=past)
+
+
+@app.route('/gallery')
+def gallery():
+    galleries = Gallery.query.filter_by(is_published=True).order_by(Gallery.order_index).all()
+    return render_template('gallery.html', galleries=galleries)
 
 
 @app.route('/contact', methods=['GET', 'POST'])
@@ -634,6 +640,75 @@ def admin_settings():
         return redirect(url_for('admin_settings'))
 
     return render_template('admin/settings.html', site_form=site_form, profile_form=profile_form, site=site)
+
+
+# ── Admin Gallery ──────────────────────────────────────────────────────────────
+
+@app.route('/admin/gallery')
+@login_required
+def admin_gallery():
+    galleries = Gallery.query.order_by(Gallery.order_index).all()
+    return render_template('admin/manage_gallery.html', galleries=galleries)
+
+
+@app.route('/admin/gallery/add', methods=['GET', 'POST'])
+@login_required
+def add_gallery():
+    form = GalleryForm()
+    if form.validate_on_submit():
+        img_path = save_image(form.image.data, 'gallery') if form.image.data and form.image.data.filename else None
+        if not img_path:
+            flash('Failed to upload image.', 'error')
+            return redirect(url_for('add_gallery'))
+        gallery = Gallery(
+            title=form.title.data,
+            description=form.description.data,
+            category=form.category.data or 'General',
+            image=img_path,
+            order_index=form.order_index.data or 0,
+            is_published=form.is_published.data
+        )
+        db.session.add(gallery)
+        db.session.commit()
+        flash('Image uploaded successfully!', 'success')
+        return redirect(url_for('admin_gallery'))
+    return render_template('admin/add_gallery.html', form=form)
+
+
+@app.route('/admin/gallery/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_gallery(id):
+    gallery = db.get_or_404(Gallery, id)
+    form = GalleryForm(obj=gallery)
+    if form.validate_on_submit():
+        if form.image.data and form.image.data.filename:
+            delete_image(gallery.image)
+            new_img = save_image(form.image.data, 'gallery')
+            if new_img:
+                gallery.image = new_img
+            else:
+                flash('Failed to upload new image.', 'error')
+                return redirect(url_for('edit_gallery', id=id))
+        gallery.title = form.title.data
+        gallery.description = form.description.data
+        gallery.category = form.category.data or 'General'
+        gallery.order_index = form.order_index.data or 0
+        gallery.is_published = form.is_published.data
+        db.session.commit()
+        flash('Image updated!', 'success')
+        return redirect(url_for('admin_gallery'))
+    return render_template('admin/edit_gallery.html', form=form, gallery=gallery)
+
+
+@app.route('/admin/gallery/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_gallery(id):
+    gallery = db.get_or_404(Gallery, id)
+    delete_image(gallery.image)
+    db.session.delete(gallery)
+    db.session.commit()
+    flash('Image deleted successfully.', 'success')
+    return redirect(url_for('admin_gallery'))
 
 
 # ── Error Handlers ─────────────────────────────────────────────────────────────

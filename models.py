@@ -89,6 +89,17 @@ class TeamMember(db.Model):
     order_index = db.Column(db.Integer, default=0)
     is_published = db.Column(db.Boolean, default=True)
 
+class Gallery(db.Model):
+    __tablename__ = 'gallery'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    image = db.Column(db.String(300), nullable=False)
+    category = db.Column(db.String(100), default='General')
+    order_index = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_published = db.Column(db.Boolean, default=True)
+
 class SiteSettings(db.Model):
     __tablename__ = 'site_settings'
     id = db.Column(db.Integer, primary_key=True)
