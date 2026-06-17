@@ -3,6 +3,11 @@
 
 {% block content %}
 
+<style>
+.past-section-default { padding: 60px 40px 60px; }
+.past-section-compact { padding: 20px 40px 60px; }
+</style>
+
 <div class="page-hero">
   <div class="page-label">Connect & Learn</div>
   <h1>Events &<br><span style="color:var(--acc)">Workshops</span></h1>
@@ -45,7 +50,7 @@
 
 <!-- Past -->
 {% if past %}
-<section style="max-width:1280px; margin:0 auto; padding:{{ '20px' if upcoming else '60px' }} 40px 60px;">
+<section class="{% if upcoming %}past-section-compact{% else %}past-section-default{% endif %}" style="max-width:1280px; margin:0 auto;">
   <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:32px; display:flex; align-items:center; gap:10px;">
     <span style="display:block; width:28px; height:1px; background:var(--muted);"></span>
     Past Events
