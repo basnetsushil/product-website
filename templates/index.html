@@ -304,6 +304,57 @@ spline-viewer.hero-spline {
 </section>
 {% endif %}
 
+<!-- Gallery Showcase -->
+{% if gallery %}
+<section style="border-top:1px solid var(--bdr); padding:100px 0; overflow:hidden;">
+  <div style="max-width:1280px; margin:0 auto; padding:0 40px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:48px; gap:24px; flex-wrap:wrap;">
+      <div>
+        <div class="section-label">Our Work</div>
+        <h2 class="section-title">Featured<br><span>Gallery</span></h2>
+      </div>
+      <a href="{{ url_for('gallery') }}" class="btn-arrow">
+        <span>View All</span>
+        <span class="arrow-icon"><i class="fas fa-arrow-up-right"></i></span>
+      </a>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+      {% for img in gallery %}
+      <div style="position:relative; overflow:hidden; border-radius:8px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.3s ease; height:300px; cursor:pointer;" 
+           onmouseenter="this.style.boxShadow='0 10px 25px rgba(0,0,0,0.15)'; this.style.transform='translateY(-5px)'" 
+           onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)'">
+        <img src="{{ url_for('static', filename=img.image) }}" alt="{{ img.title }}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s ease;">
+        <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding:24px; color:white; transform:translateY(100%); transition:transform 0.3s ease;" 
+             class="gallery-overlay">
+          <h3 style="margin:0 0 8px 0; font-size:0.95rem; font-weight:600;">{{ img.title }}</h3>
+          {% if img.category %}<span style="display:inline-block; font-size:0.75rem; background:rgba(59,130,246,0.8); color:white; padding:4px 10px; border-radius:12px; margin-top:8px;">{{ img.category }}</span>{% endif %}
+        </div>
+        <a href="{{ url_for('static', filename=img.image) }}" style="position:absolute; top:12px; right:12px; width:40px; height:40px; background:rgba(59,130,246,0.9); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.8); transition:all 0.3s ease; text-decoration:none; z-index:10;" 
+           data-lightbox="home-gallery" title="{{ img.title }}"
+           onmouseenter="parentElement.style.opacity='1'; parentElement.style.transform='scale(1)'" 
+           onmouseleave="parentElement.style.opacity='0'; parentElement.style.transform='scale(0.8)'">
+          <i class="fas fa-expand"></i>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script>
+// Gallery hover effect for overlay
+document.querySelectorAll('[class="gallery-overlay"]').forEach(overlay => {
+  const card = overlay.closest('[style*="position:relative"]');
+  card.addEventListener('mouseenter', function() {
+    overlay.style.transform = 'translateY(0)';
+  });
+  card.addEventListener('mouseleave', function() {
+    overlay.style.transform = 'translateY(100%)';
+  });
+});
+</script>
+{% endif %}
+
 <!-- Testimonials -->
 {% if testimonials %}
 <section style="border-top:1px solid var(--bdr); padding:100px 0; overflow:hidden;">

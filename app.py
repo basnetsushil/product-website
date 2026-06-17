@@ -115,8 +115,9 @@ def index():
     testimonials = Testimonial.query.filter_by(is_published=True).limit(3).all()
     solutions = Solution.query.filter_by(is_published=True).order_by(Solution.order_index).limit(3).all()
     team = TeamMember.query.filter_by(is_published=True).order_by(TeamMember.order_index).limit(4).all()
+    gallery = Gallery.query.filter_by(is_published=True).order_by(Gallery.order_index).limit(6).all()
     return render_template('index.html', articles=articles, testimonials=testimonials,
-                           solutions=solutions, team=team)
+                           solutions=solutions, team=team, gallery=gallery)
 
 
 @app.route('/solutions')
