@@ -1,46 +1,81 @@
-{% extends "base.html" %}
+{% extends 'admin/base_admin.html' %}
+{% block title %}Add Testimonial{% endblock %}
+{% block breadcrumb %}
+<span class="bc-sep">/</span><a href="{{ url_for('admin_testimonials') }}">Testimonials</a>
+<span class="bc-sep">/</span><span>Add</span>
+{% endblock %}
+
 {% block content %}
-<div class="flex min-h-screen bg-black">
-    {% include 'admin/_sidebar.html' %}
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold text-gradient mb-10">Add Testimonial</h1>
-            <form method="POST" enctype="multipart/form-data" class="glass p-8 rounded-3xl space-y-6 border border-white/10 backdrop-blur-xl">
-                {{ form.hidden_tag() }}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Customer Name</label>
-                        {{ form.customer_name(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Company</label>
-                        {{ form.company(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-neutral-300">Quote</label>
-                    {{ form.quote(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30 h-32") }}
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Rating (1-5)</label>
-                        {{ form.rating(class="bg-black/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-white/30") }}
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-semibold text-neutral-300">Avatar Image</label>
-                        {{ form.avatar(class="text-sm text-neutral-400") }}
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 p-4 bg-white/5 rounded-xl">
-                    {{ form.is_published(class="w-4 h-4") }}
-                    <label class="text-sm font-medium text-neutral-300">Publish to Website</label>
-                </div>
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-neutral-200 transition-all">Save Testimonial</button>
-                    <a href="{{ url_for('manage_testimonials') }}" class="glass px-8 py-3 rounded-full font-bold text-center border border-white/10">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </main>
+<div class="page-header">
+    <h1 class="page-title">Add Testimonial</h1>
+    <a href="{{ url_for('admin_testimonials') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+<div class="admin-card form-card">
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.customer_name.label(class="form-label") }}
+                {{ form.customer_name(class="form-input") }}
+                {% for e in form.customer_name.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.company.label(class="form-label") }}
+                {{ form.company(class="form-input") }}
+                {% for e in form.company.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+            <div class="form-group">
+                {{ form.job_title.label(class="form-label") }}
+                {{ form.job_title(class="form-input", placeholder="e.g. CEO, CTO") }}
+                {% for e in form.job_title.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.rating.label(class="form-label") }}
+                {{ form.rating(class="form-input") }}
+                {% for e in form.rating.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.quote.label(class="form-label") }}
+            {{ form.quote(class="form-input form-textarea", rows=5, placeholder="What did the client say?") }}
+            {% for e in form.quote.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Avatar Image <span class="label-hint">(optional)</span></label>
+            <div class="upload-zone upload-zone--avatar" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-zone-inner" id="uploadZoneInner">
+                    <i class="fas fa-user-circle"></i>
+                    <p>Upload client photo</p>
+                    <span>JPG, PNG — max 5MB</span>
+                </div>
+                <img id="imagePreview" class="upload-preview upload-preview--avatar" style="display:none" alt="Preview">
+            </div>
+            {{ form.avatar(id="imageInput", class="upload-input", accept=".jpg,.jpeg,.png,.gif,.webp") }}
+            {% for e in form.avatar.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group form-group--checkbox">
+            <label class="checkbox-label">
+                {{ form.is_published(class="checkbox-input") }}
+                <span class="checkbox-custom"></span>
+                Publish to website
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_testimonials') }}" class="btn-secondary">Cancel</a>
+            {{ form.submit(class="btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>initImageUpload('imageInput','uploadZone','imagePreview','uploadZoneInner');</script>
 {% endblock %}
