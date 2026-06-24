@@ -9,58 +9,42 @@
   <p>Real AI deployments. Measurable outcomes. Businesses across the North East and beyond transformed.</p>
 </div>
 
+<section class="content-filter-section content-filter-section--single" aria-label="Case study filters">
+  <div class="filter-label">Filter</div>
+  <nav class="filter-chip-group" aria-label="Filter case studies by industry">
+    <a href="{{ url_for('case_studies') }}"
+       class="filter-chip {{ 'is-active' if not selected_industry }}"
+       {% if not selected_industry %}aria-current="page"{% endif %}>
+      All Industries
+    </a>
+    {% for industry in industries %}
+      <a href="{{ url_for('case_studies', industry=industry) }}"
+         class="filter-chip {{ 'is-active' if selected_industry == industry }}"
+         {% if selected_industry == industry %}aria-current="page"{% endif %}>
+        {{ industry }}
+      </a>
+    {% endfor %}
+  </nav>
+</section>
+
 <!-- Case Grid -->
 <div style="max-width:1280px; margin:0 auto; padding:60px 40px 0;">
   <div class="case-grid">
 
+    {% for case in case_studies %}
     <div class="case-card">
-      <div class="case-number">01</div>
-      <div class="case-industry">Manufacturing · Computer Vision</div>
-      <h3 class="case-title">Eliminating defects on the production line</h3>
-      <div class="case-stat">-50%</div>
-      <div class="case-stat-label">defect rate in 6 months</div>
+      <div class="case-number">{{ case.number }}</div>
+      <div class="case-industry">{{ case.industry }} &middot; {{ case.solution }}</div>
+      <h3 class="case-title">{{ case.title }}</h3>
+      <div class="case-stat">{{ case.stat }}</div>
+      <div class="case-stat-label">{{ case.stat_label }}</div>
       <a href="{{ url_for('contact') }}" class="arrow-link" style="margin-top:20px;">Read More <i class="fas fa-arrow-up-right"></i></a>
     </div>
-
-    <div class="case-card">
-      <div class="case-number">02</div>
-      <div class="case-industry">Retail · NLP & Automation</div>
-      <h3 class="case-title">Transforming customer service at scale</h3>
-      <div class="case-stat">+18pts</div>
-      <div class="case-stat-label">customer satisfaction score</div>
-      <a href="{{ url_for('contact') }}" class="arrow-link" style="margin-top:20px;">Read More <i class="fas fa-arrow-up-right"></i></a>
-    </div>
-
-    <div class="case-card">
-      <div class="case-number">03</div>
-      <div class="case-industry">Logistics · Predictive Analytics</div>
-      <h3 class="case-title">Demand forecasting that moved the needle</h3>
-      <div class="case-stat">90 days</div>
-      <div class="case-stat-label">accurate demand visibility</div>
-      <a href="{{ url_for('contact') }}" class="arrow-link" style="margin-top:20px;">Read More <i class="fas fa-arrow-up-right"></i></a>
-    </div>
-
-    <div class="case-card">
-      <div class="case-number">04</div>
-      <div class="case-industry">Healthcare · AI Strategy</div>
-      <h3 class="case-title">Building an AI roadmap for a health trust</h3>
-      <div class="case-stat">12mo</div>
-      <div class="case-stat-label">from assessment to deployment</div>
-      <a href="{{ url_for('contact') }}" class="arrow-link" style="margin-top:20px;">Read More <i class="fas fa-arrow-up-right"></i></a>
-    </div>
-
-    <div class="case-card">
-      <div class="case-number">05</div>
-      <div class="case-industry">Finance · Process Automation</div>
-      <h3 class="case-title">Automating invoice processing end-to-end</h3>
-      <div class="case-stat">70%</div>
-      <div class="case-stat-label">reduction in processing time</div>
-      <a href="{{ url_for('contact') }}" class="arrow-link" style="margin-top:20px;">Read More <i class="fas fa-arrow-up-right"></i></a>
-    </div>
+    {% endfor %}
 
     <div class="case-card" style="background:var(--sur); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:48px;">
-      <div class="case-number" style="position:static; font-size:1rem; opacity:1; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted);">Your Business</div>
-      <h3 style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; letter-spacing:-0.03em; margin:16px 0;">
+      <div class="case-number" style="position:static; font-size:1rem; opacity:1; letter-spacing:0; text-transform:uppercase; color:var(--muted);">Your Business</div>
+      <h3 style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; letter-spacing:0; margin:16px 0;">
         Could be next.
       </h3>
       <p style="color:var(--muted); font-size:0.875rem; margin-bottom:28px;">We're actively looking for ambitious businesses ready to deploy AI.</p>
@@ -76,11 +60,11 @@
 <!-- Industries -->
 <section style="max-width:1280px; margin:0 auto; padding:100px 40px;">
   <div class="section-label">Industries We Serve</div>
-  <h2 style="font-family:var(--font-display); font-size:clamp(2rem,4vw,3rem); font-weight:800; letter-spacing:-0.04em; margin-bottom:48px;">
+  <h2 style="font-family:var(--font-display); font-size:2.6rem; font-weight:800; letter-spacing:0; margin-bottom:48px;">
     Sector expertise<br><span style="color:var(--acc)">built in</span>
   </h2>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1px; background:var(--bdr);">
-    {% set industries = [
+    {% set served_industries = [
       ('fas fa-industry', 'Manufacturing'),
       ('fas fa-shopping-cart', 'Retail'),
       ('fas fa-truck', 'Logistics'),
@@ -90,10 +74,10 @@
       ('fas fa-graduation-cap', 'Education'),
       ('fas fa-leaf', 'Energy & Utilities'),
     ] %}
-    {% for icon, name in industries %}
+    {% for icon, name in served_industries %}
     <div style="background:var(--bg); padding:32px; display:flex; flex-direction:column; align-items:flex-start; gap:14px; transition:background 0.3s;" onmouseenter="this.style.background='var(--sur)'" onmouseleave="this.style.background='var(--bg)'">
       <i class="{{ icon }}" style="font-size:1.3rem; color:var(--acc);"></i>
-      <span style="font-weight:600; font-size:0.9rem; letter-spacing:-0.01em;">{{ name }}</span>
+      <span style="font-weight:600; font-size:0.9rem; letter-spacing:0;">{{ name }}</span>
     </div>
     {% endfor %}
   </div>

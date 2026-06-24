@@ -9,7 +9,7 @@ from flask import (Flask, render_template, redirect, url_for, flash, request,
                    send_file, make_response, g)
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from werkzeug.utils import secure_filename
 from PIL import Image as PILImage
 
@@ -128,7 +128,60 @@ def solutions():
 
 @app.route('/case-studies')
 def case_studies():
-    return render_template('case_studies.html')
+    selected_industry = request.args.get('industry', '').strip()
+    case_study_items = [
+        {
+            'number': '01',
+            'industry': 'Manufacturing',
+            'solution': 'Computer Vision',
+            'title': 'Eliminating defects on the production line',
+            'stat': '-50%',
+            'stat_label': 'defect rate in 6 months',
+        },
+        {
+            'number': '02',
+            'industry': 'Retail',
+            'solution': 'NLP & Automation',
+            'title': 'Transforming customer service at scale',
+            'stat': '+18pts',
+            'stat_label': 'customer satisfaction score',
+        },
+        {
+            'number': '03',
+            'industry': 'Logistics',
+            'solution': 'Predictive Analytics',
+            'title': 'Demand forecasting that moved the needle',
+            'stat': '90 days',
+            'stat_label': 'accurate demand visibility',
+        },
+        {
+            'number': '04',
+            'industry': 'Healthcare',
+            'solution': 'AI Strategy',
+            'title': 'Building an AI roadmap for a health trust',
+            'stat': '12mo',
+            'stat_label': 'from assessment to deployment',
+        },
+        {
+            'number': '05',
+            'industry': 'Finance',
+            'solution': 'Process Automation',
+            'title': 'Automating invoice processing end-to-end',
+            'stat': '70%',
+            'stat_label': 'reduction in processing time',
+        },
+    ]
+    industries = ['Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Logistics']
+    filtered_cases = [
+        item for item in case_study_items
+        if not selected_industry or item['industry'] == selected_industry
+    ]
+    return render_template(
+        'case_studies.html',
+        case_studies=filtered_cases,
+        industries=industries,
+        selected_industry=selected_industry
+    )
 
 
 @app.route('/testimonials')
@@ -139,8 +192,38 @@ def testimonials():
 
 @app.route('/articles')
 def articles():
-    articles = Article.query.filter_by(is_published=True).order_by(desc(Article.published_at)).all()
-    return render_template('articles.html', articles=articles)
+    selected_category = request.args.get('category', '').strip()
+    search_query = request.args.get('q', '').strip()
+    category_rows = (
+        db.session.query(Article.category)
+        .filter(Article.is_published == True, Article.category.isnot(None), Article.category != '')
+        .distinct()
+        .order_by(Article.category)
+        .all()
+    )
+    categories = [row[0] for row in category_rows]
+
+    article_query = Article.query.filter_by(is_published=True)
+    if selected_category:
+        article_query = article_query.filter(Article.category == selected_category)
+    if search_query:
+        like_query = f'%{search_query}%'
+        article_query = article_query.filter(or_(
+            Article.title.ilike(like_query),
+            Article.excerpt.ilike(like_query),
+            Article.body.ilike(like_query),
+            Article.category.ilike(like_query),
+            Article.author.ilike(like_query)
+        ))
+
+    articles = article_query.order_by(desc(Article.published_at)).all()
+    return render_template(
+        'articles.html',
+        articles=articles,
+        categories=categories,
+        selected_category=selected_category,
+        search_query=search_query
+    )
 
 
 @app.route('/articles/<int:id>')

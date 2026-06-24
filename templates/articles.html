@@ -9,36 +9,76 @@
   <p>Practical thinking on AI strategy, technology, and implementation from our team of practitioners.</p>
 </div>
 
+<section class="content-filter-section" aria-label="Article filters">
+  <form class="article-filter-form" method="get" action="{{ url_for('articles') }}">
+    <label class="sr-only" for="article-search">Search articles</label>
+    <div class="filter-search">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input id="article-search" type="search" name="q" value="{{ search_query }}" placeholder="Search articles..." autocomplete="off">
+    </div>
+    {% if selected_category %}
+      <input type="hidden" name="category" value="{{ selected_category }}">
+    {% endif %}
+    <button class="filter-submit" type="submit">
+      <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      <span>Search</span>
+    </button>
+  </form>
+
+  <nav class="filter-chip-group" aria-label="Filter articles by category">
+    <a href="{{ url_for('articles', q=search_query) if search_query else url_for('articles') }}"
+       class="filter-chip {{ 'is-active' if not selected_category }}"
+       {% if not selected_category %}aria-current="page"{% endif %}>
+      All
+    </a>
+    {% for category in categories %}
+      <a href="{{ url_for('articles', category=category, q=search_query) if search_query else url_for('articles', category=category) }}"
+         class="filter-chip {{ 'is-active' if selected_category == category }}"
+         {% if selected_category == category %}aria-current="page"{% endif %}>
+        {{ category }}
+      </a>
+    {% endfor %}
+    {% if search_query or selected_category %}
+      <a href="{{ url_for('articles') }}" class="filter-chip filter-chip--quiet">Reset</a>
+    {% endif %}
+  </nav>
+</section>
+
+{% if search_query or selected_category %}
+<div class="filter-results-note">
+  {{ articles|length }} result{{ '' if articles|length == 1 else 's' }}
+  {% if search_query %} for "{{ search_query }}"{% endif %}
+  {% if selected_category %} in {{ selected_category }}{% endif %}
+</div>
+{% endif %}
+
 {% if articles %}
 <!-- Featured article -->
 {% set feat = articles[0] %}
-<div style="border-bottom:1px solid var(--bdr);">
-  <div style="max-width:1280px; margin:0 auto;">
-    <a href="{{ url_for('article_detail', id=feat.id) }}" style="display:grid; grid-template-columns:1fr 1fr; text-decoration:none; min-height:400px;">
-      <div style="padding:60px 40px; display:flex; flex-direction:column; justify-content:flex-end; border-right:1px solid var(--bdr);">
-        <div style="margin-top:auto;">
-          {% if feat.category %}<div class="article-category" style="margin-bottom:14px;">{{ feat.category }}</div>{% endif %}
-          <h2 style="font-family:var(--font-display); font-size:clamp(1.8rem,3.5vw,2.8rem); font-weight:800; letter-spacing:-0.04em; line-height:1.1; color:var(--fg); margin-bottom:16px;">{{ feat.title }}</h2>
-          {% if feat.excerpt %}<p style="font-size:0.95rem; color:var(--muted); line-height:1.7; margin-bottom:24px;">{{ feat.excerpt }}</p>{% endif %}
-          <div style="display:flex; align-items:center; gap:16px; font-size:0.72rem; color:var(--muted); letter-spacing:0.05em;">
+<div class="featured-article-wrap">
+  <div class="featured-article-inner">
+    <a href="{{ url_for('article_detail', id=feat.id) }}" class="featured-article">
+      <div class="featured-article-copy">
+        <div class="featured-article-copy-inner">
+          {% if feat.category %}<div class="article-category featured-article-category">{{ feat.category }}</div>{% endif %}
+          <h2 class="featured-article-title">{{ feat.title }}</h2>
+          {% if feat.excerpt %}<p class="featured-article-excerpt">{{ feat.excerpt }}</p>{% endif %}
+          <div class="featured-article-meta">
             <span>{{ feat.author }}</span>
-            <span style="color:var(--bdr)">|</span>
+            <span class="featured-article-divider">|</span>
             <span>{{ feat.published_at.strftime('%d %b %Y') }}</span>
           </div>
         </div>
       </div>
-      <div style="overflow:hidden; position:relative; min-height:400px;">
+      <div class="featured-article-media">
         {% if feat.cover_image %}
-          <img src="{{ url_for('static', filename=feat.cover_image) }}" alt="{{ feat.title }}"
-               style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; filter:grayscale(20%);">
+          <img src="{{ url_for('static', filename=feat.cover_image) }}" alt="{{ feat.title }}" class="featured-article-img">
         {% else %}
-          <div style="width:100%; height:100%; background:var(--sur); display:flex; align-items:center; justify-content:center; position:absolute; inset:0;">
-            <i class="fas fa-newspaper" style="font-size:6rem; color:var(--fg); opacity:0.05;"></i>
+          <div class="featured-article-placeholder">
+            <i class="fas fa-newspaper" aria-hidden="true"></i>
           </div>
         {% endif %}
-        <div style="position:absolute; top:0; left:0; background:var(--acc); color:var(--bg); font-size:0.65rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; padding:6px 14px;">
-          Latest
-        </div>
+        <div class="featured-article-badge">Latest</div>
       </div>
     </a>
   </div>
@@ -54,7 +94,7 @@
         {% if article.cover_image %}
           <img src="{{ url_for('static', filename=article.cover_image) }}" alt="{{ article.title }}" class="article-card-img">
         {% else %}
-          <div class="article-card-img-placeholder"><i class="fas fa-newspaper"></i></div>
+          <div class="article-card-img-placeholder"><i class="fas fa-newspaper" aria-hidden="true"></i></div>
         {% endif %}
       </div>
       <div class="article-card-body">
@@ -73,9 +113,17 @@
 {% endif %}
 
 {% else %}
-<div style="max-width:1280px; margin:0 auto; padding:100px 40px; text-align:center; color:var(--muted);">
-  <i class="fas fa-newspaper" style="font-size:3rem; opacity:0.2; display:block; margin-bottom:16px;"></i>
-  <p>No articles published yet.</p>
+<div class="empty-content-state">
+  <i class="fas fa-newspaper" aria-hidden="true"></i>
+  {% if search_query or selected_category %}
+    <p>No articles match those filters.</p>
+    <a href="{{ url_for('articles') }}" class="btn btn-outline">
+      <span>Clear filters</span>
+      <i class="fas fa-arrow-rotate-left" aria-hidden="true"></i>
+    </a>
+  {% else %}
+    <p>No articles published yet.</p>
+  {% endif %}
 </div>
 {% endif %}
 
