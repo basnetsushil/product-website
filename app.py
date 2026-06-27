@@ -429,7 +429,7 @@ def admin_enquiries():
 @login_required
 def enquiry_detail(id):
     enquiry = db.get_or_404(Enquiry, id)
-    return render_template('admin/enquiry_detail.html', enquiry=enquiry)
+    return render_template('admin/manage_enquiries.html', enquiry=enquiry)
 
 
 @app.route('/admin/enquiries/<int:id>/delete', methods=['POST'])
