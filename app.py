@@ -422,14 +422,14 @@ def admin_dashboard():
 @login_required
 def admin_enquiries():
     enquiries = Enquiry.query.order_by(desc(Enquiry.submitted_at)).all()
-    return render_template('admin/enquiries.html', enquiries=enquiries)
+    return render_template('admin/manage_enquiries.html', enquiries=enquiries)
 
 
 @app.route('/admin/enquiries/<int:id>')
 @login_required
 def enquiry_detail(id):
     enquiry = db.get_or_404(Enquiry, id)
-    return render_template('admin/manage_enquiries.html', enquiry=enquiry)
+    return render_template('admin/enquiry_detail.html', enquiry=enquiry)
 
 
 @app.route('/admin/enquiries/<int:id>/delete', methods=['POST'])
