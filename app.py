@@ -1,6 +1,7 @@
 import os
 import csv
 import uuid
+import socket
 from io import StringIO
 from datetime import datetime, timedelta
 from functools import wraps
@@ -17,30 +18,39 @@ from models import db, AdminUser, Enquiry, Article, Event, Testimonial, Solution
 from forms import (ContactForm, AdminLoginForm, EventForm, ArticleForm, TestimonialForm,
                    SolutionForm, TeamMemberForm, SiteSettingsForm, AdminProfileForm, GalleryForm)
 
-from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = 'my-secret-key'
-
-csrf = CSRFProtect(app)
-
 # Config
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-prod-2024')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ai_solutions.db'
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///ai_solutions.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'localhost')
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 25))
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'false').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true'
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'info@ai-solutions.uk')
+app.config['MAIL_SUPPRESS_SEND'] = not bool(app.config['MAIL_SERVER'])
+app.config['MAIL_TIMEOUT'] = int(os.environ.get('MAIL_TIMEOUT', 5))
+app.config['MAIL_RECIPIENTS'] = [
+    email.strip()
+    for email in os.environ.get('MAIL_RECIPIENTS', app.config['MAIL_DEFAULT_SENDER']).split(',')
+    if email.strip()
+]
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+os.makedirs(app.instance_path, exist_ok=True)
+
+csrf = CSRFProtect(app)
 db.init_app(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
@@ -99,12 +109,66 @@ def delete_image(path):
                 pass
 
 
+def send_enquiry_notification(form):
+    if app.config['MAIL_SUPPRESS_SEND'] or not app.config['MAIL_RECIPIENTS']:
+        app.logger.info('Skipping enquiry email because MAIL_SERVER is not configured.')
+        return
+
+    msg = Message(
+        subject=f"New Enquiry from {form.name.data}",
+        recipients=app.config['MAIL_RECIPIENTS'],
+        body=(
+            f"Name: {form.name.data}\n"
+            f"Email: {form.email.data}\n"
+            f"Phone: {form.phone.data or 'Not provided'}\n"
+            f"Company: {form.company.data or 'Not provided'}\n"
+            f"Country: {form.country.data or 'Not provided'}\n"
+            f"Job Title: {form.job_title.data or 'Not provided'}\n\n"
+            f"{form.job_details.data}"
+        )
+    )
+
+    previous_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(app.config['MAIL_TIMEOUT'])
+    try:
+        mail.send(msg)
+    except Exception:
+        app.logger.exception('Failed to send enquiry notification email.')
+    finally:
+        socket.setdefaulttimeout(previous_timeout)
+
+
+def init_database():
+    with app.app_context():
+        db.create_all()
+        if not db.session.get(SiteSettings, 1):
+            db.session.add(SiteSettings(
+                id=1,
+                company_name='AI-Solutions',
+                email='info@ai-solutions.uk',
+                phone='+44 (0)191 123 4567',
+                address='Sunderland, UK'
+            ))
+            db.session.commit()
+
+
 @app.context_processor
 def inject_settings():
-    settings = db.session.get(SiteSettings, 1)
+    try:
+        settings = db.session.get(SiteSettings, 1)
+    except Exception:
+        db.session.rollback()
+        settings = None
+        app.logger.exception('Could not load site settings.')
     if not settings:
         settings = SiteSettings(id=1, company_name='AI-Solutions')
     return dict(settings=settings)
+
+
+try:
+    init_database()
+except Exception:
+    app.logger.exception('Database initialization failed during app startup.')
 
 
 # ── Public Routes ───────────────────────────────────────────────────────────────
@@ -249,24 +313,32 @@ def gallery():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     form = ContactForm()
-    site = db.session.get(SiteSettings, 1)
+    try:
+        site = db.session.get(SiteSettings, 1)
+    except Exception:
+        db.session.rollback()
+        app.logger.exception('Could not load site settings on contact page.')
+        site = None
     if form.validate_on_submit():
-        enquiry = Enquiry(
-            name=form.name.data, email=form.email.data, phone=form.phone.data,
-            company=form.company.data, country=form.country.data,
-            job_title=form.job_title.data, job_details=form.job_details.data
-        )
-        db.session.add(enquiry)
-        db.session.commit()
         try:
-            msg = Message(
-                subject=f"New Enquiry from {form.name.data}",
-                recipients=['info@ai-solutions.uk'],
-                body=f"Name: {form.name.data}\nEmail: {form.email.data}\nCompany: {form.company.data}\n\n{form.job_details.data}"
+            enquiry = Enquiry(
+                name=form.name.data,
+                email=form.email.data,
+                phone=form.phone.data,
+                company=form.company.data,
+                country=form.country.data,
+                job_title=form.job_title.data,
+                job_details=form.job_details.data
             )
-            mail.send(msg)
-        except Exception as e:
-            print(f"Mail error: {e}")
+            db.session.add(enquiry)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            app.logger.exception('Failed to save contact enquiry.')
+            flash('Sorry, your enquiry could not be saved right now. Please try again in a moment.', 'error')
+            return render_template('contact.html', form=form, site=site), 500
+
+        send_enquiry_notification(form)
         flash('Thank you! Your enquiry has been received. We\'ll be in touch shortly.', 'success')
         return redirect(url_for('contact'))
     return render_template('contact.html', form=form, site=site)
@@ -809,4 +881,8 @@ def server_error(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000)),
+        debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    )
