@@ -2,6 +2,7 @@ import os
 import csv
 import uuid
 import socket
+import requests
 from io import StringIO
 from datetime import datetime, timedelta
 from functools import wraps
@@ -110,14 +111,19 @@ def delete_image(path):
 
 
 def send_enquiry_notification(form):
-    if app.config['MAIL_SUPPRESS_SEND'] or not app.config['MAIL_RECIPIENTS']:
-        app.logger.info('Skipping enquiry email because MAIL_SERVER is not configured.')
+    api_key = os.environ.get('BREVO_API_KEY')
+    admin_email = os.environ.get('ADMIN_EMAIL')
+    sender_email = os.environ.get('MAIL_USERNAME')
+
+    if not api_key or not admin_email:
+        app.logger.info('Skipping enquiry email: BREVO_API_KEY or ADMIN_EMAIL not set.')
         return
 
-    msg = Message(
-        subject=f"New Enquiry from {form.name.data}",
-        recipients=app.config['MAIL_RECIPIENTS'],
-        body=(
+    payload = {
+        "sender": {"name": "AI-Solutions Website", "email": sender_email},
+        "to": [{"email": admin_email}],
+        "subject": f"New Enquiry from {form.name.data}",
+        "textContent": (
             f"Name: {form.name.data}\n"
             f"Email: {form.email.data}\n"
             f"Phone: {form.phone.data or 'Not provided'}\n"
@@ -126,17 +132,21 @@ def send_enquiry_notification(form):
             f"Job Title: {form.job_title.data or 'Not provided'}\n\n"
             f"{form.job_details.data}"
         )
-    )
-
-    previous_timeout = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(app.config['MAIL_TIMEOUT'])
+    }
     try:
-        mail.send(msg)
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers={
+                "accept": "application/json",
+                "api-key": api_key,
+                "content-type": "application/json"
+            },
+            timeout=10
+        )
+        response.raise_for_status()
     except Exception:
         app.logger.exception('Failed to send enquiry notification email.')
-    finally:
-        socket.setdefaulttimeout(previous_timeout)
-
 
 def init_database():
     with app.app_context():
