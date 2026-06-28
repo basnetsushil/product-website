@@ -111,19 +111,18 @@ def delete_image(path):
 
 
 def send_enquiry_notification(form):
-    api_key = os.environ.get('BREVO_API_KEY')
+    api_key = os.environ.get('RESEND_API_KEY')
     admin_email = os.environ.get('ADMIN_EMAIL')
-    sender_email = os.environ.get('MAIL_USERNAME')
 
     if not api_key or not admin_email:
-        app.logger.info('Skipping enquiry email: BREVO_API_KEY or ADMIN_EMAIL not set.')
+        app.logger.info('Skipping enquiry email: RESEND_API_KEY or ADMIN_EMAIL not set.')
         return
 
     payload = {
-        "sender": {"name": "AI-Solutions Website", "email": sender_email},
-        "to": [{"email": admin_email}],
+        "from": "AI-Solutions Website <onboarding@resend.dev>",
+        "to": [admin_email],
         "subject": f"New Enquiry from {form.name.data}",
-        "textContent": (
+        "text": (
             f"Name: {form.name.data}\n"
             f"Email: {form.email.data}\n"
             f"Phone: {form.phone.data or 'Not provided'}\n"
@@ -135,18 +134,18 @@ def send_enquiry_notification(form):
     }
     try:
         response = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
+            "https://api.resend.com/emails",
             json=payload,
             headers={
-                "accept": "application/json",
-                "api-key": api_key,
-                "content-type": "application/json"
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
             },
             timeout=10
         )
         response.raise_for_status()
     except Exception:
-        app.logger.exception('Failed to send enquiry notification email.')
+        app.logger.exception('Failed to send enquiry notification email. Response body: %s',
+                              getattr(response, 'text', 'no response'))
 
 def init_database():
     with app.app_context():
